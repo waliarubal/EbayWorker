@@ -1,0 +1,97 @@
+﻿<Window
+    x:Class="EbayWorker.Views.SearchView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:EbayWorker.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:EbayWorker.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:EbayWorker.ViewModels"
+    Title="Search Query"
+    Width="640"
+    Height="480"
+    ResizeMode="NoResize"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Window.DataContext>
+        <vm:SearchViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Assets/Styles/SharedStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Search Keywoard:" />
+        <TextBlock Grid.Column="1" Text="{Binding Path=SearchQuery.Keywoard, Mode=OneWay}" />
+
+        <TextBlock Grid.Row="1" Text="Category:" />
+        <TextBlock
+            Grid.Row="1"
+            Grid.Column="1"
+            Text="{Binding Path=SearchQuery.Category, Mode=OneWay}" />
+
+        <TextBlock Grid.Row="2" Text="Status:" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="1"
+            Text="{Binding Path=SearchQuery.Status, Mode=OneWay}" />
+
+        <DataGrid
+            Grid.Row="3"
+            Grid.ColumnSpan="2"
+            IsReadOnly="True"
+            ItemsSource="{Binding Path=SearchQuery.Books, Mode=OneWay}">
+            <DataGrid.Columns>
+                <DataGridTextColumn
+                    Width="100"
+                    Binding="{Binding Path=Code, Mode=OneWay}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
+                    Header="Code" />
+                <DataGridTextColumn
+                    Width="100"
+                    Binding="{Binding Path=Isbn, Mode=OneWay}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
+                    Header="ISBN" />
+                <DataGridTextColumn
+                    Width="180"
+                    Binding="{Binding Path=Title, Mode=OneWay}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
+                    Header="Title" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=Price, Mode=OneWay}"
+                    Header="Price" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=Condition, Mode=OneWay, Converter={StaticResource ResourceKey=EnumToStringConverter}}"
+                    Header="Condition" />
+                <DataGridTemplateColumn Width="Auto" Header="URL">
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button
+                                Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Mode=OneTime, Path=DataContext.OpenUrlCommand}"
+                                CommandParameter="{Binding Path=Url, Mode=OneWay}"
+                                ToolTip="{Binding Path=Url, Mode=OneWay}">
+                                <Image Source="/Assets/MicrosoftEdge16.png" />
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+</Window>

@@ -1,0 +1,152 @@
+﻿<Window
+    x:Class="EbayWorker.Views.HomeView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:EbayWorker.Converters"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:EbayWorker.Views"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:vm="clr-namespace:EbayWorker.ViewModels"
+    Title="Ebay Worker"
+    Width="800"
+    Height="600"
+    ResizeMode="CanMinimize"
+    WindowStartupLocation="CenterScreen"
+    mc:Ignorable="d">
+    <Window.DataContext>
+        <vm:HomeViewModel />
+    </Window.DataContext>
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Assets/Styles/SharedStyles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBlock Text="Input File:" />
+        <TextBox
+            Grid.Column="1"
+            Cursor="Help"
+            IsReadOnly="True"
+            Text="{Binding Path=InputFilePath, Mode=OneWay}"
+            ToolTip="Select input file containing ISBN (International Standard Book Number) codes." />
+        <Button
+            Grid.Column="2"
+            Command="{Binding Path=SelectInputFileCommand, Mode=OneTime}"
+            ToolTip="Select file...">
+            <Image Source="/Assets/File16.png" />
+        </Button>
+
+        <TextBlock Grid.Row="1" Text="Output Directory:" />
+        <TextBox
+            Grid.Row="1"
+            Grid.Column="1"
+            Cursor="Help"
+            IsReadOnly="True"
+            Text="{Binding Path=OutputDirectoryPath, Mode=OneWay}"
+            ToolTip="Selet output directory." />
+        <Button
+            Grid.Row="1"
+            Grid.Column="2"
+            ToolTip="Select directory...">
+            <Image Source="/Assets/Folder16.png" />
+        </Button>
+
+        <DataGrid
+            Grid.Row="2"
+            Grid.ColumnSpan="3"
+            IsReadOnly="True"
+            ItemsSource="{Binding Path=SearchQueries, Mode=OneWay}">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image Source="{Binding Path=Status, Mode=OneWay, Converter={StaticResource ResourceKey=SearchStatusToImageSourceConverter}}" />
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+                <DataGridTextColumn
+                    Width="160"
+                    Binding="{Binding Path=Keywoard, Mode=OneWay}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
+                    Header="Search Keywoard" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=Books.Count, Mode=OneWay}"
+                    FontWeight="Bold"
+                    Header="Books" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=BrandNewCount, Mode=OneWay}"
+                    Header="Brand New" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=LikeNewCount, Mode=OneWay}"
+                    Header="Like New" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=VeryGoodCount, Mode=OneWay}"
+                    Header="Very Good" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=GoodCount, Mode=OneWay}"
+                    Header="Good" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=AcceptableCount, Mode=OneWay}"
+                    Header="Acceptable" />
+                <DataGridTemplateColumn>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Button Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Mode=OneTime, Path=DataContext.ShowSearchQueryCommand}" CommandParameter="{Binding}">
+                                <StackPanel Orientation="Horizontal">
+                                    <Image Source="/Assets/Book16.png" />
+                                    <TextBlock Margin="4,0" Text="Details..." />
+                                </StackPanel>
+                            </Button>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <Grid Grid.Row="3" Grid.ColumnSpan="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <Button Grid.Row="3" Command="{Binding Path=SearchCommand, Mode=OneTime}">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Assets/Work16.png" />
+                    <TextBlock Text="Scrap Data" />
+                </StackPanel>
+            </Button>
+            <Image
+                Grid.Column="2"
+                VerticalAlignment="Center"
+                Source="/Assets/refresh16.png"
+                Style="{StaticResource ResourceKey=Spinner}"
+                Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}" />
+            <TextBlock
+                Grid.Column="3"
+                VerticalAlignment="Center"
+                Text="Scraping data from eBay..."
+                Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}" />
+        </Grid>
+    </Grid>
+</Window>

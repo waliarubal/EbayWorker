@@ -1,0 +1,10 @@
+﻿<Application
+    x:Class="EbayWorker.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:EbayWorker"
+    StartupUri="Views/HomeView.xaml">
+    <Application.Resources>
+
+    </Application.Resources>
+</Application>
