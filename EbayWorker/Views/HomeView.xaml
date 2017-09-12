@@ -27,6 +27,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height=".75*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -65,8 +66,89 @@
             <Image Source="/Assets/Folder16.png" />
         </Button>
 
+        <GroupBox Grid.Row="2" Grid.ColumnSpan="3">
+            <GroupBox.Header>
+                <CheckBox Content="Seller Filters" IsChecked="{Binding Path=Filter.IsFilterEnabled, Mode=TwoWay}" />
+            </GroupBox.Header>
+            <Grid IsEnabled="{Binding Path=IsFilterEnabled, Mode=OneWay}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Feedback Score (more than):" />
+                <TextBox Grid.Column="1" Text="{Binding Path=Filter.FeedbackScore, Mode=TwoWay}" />
+
+                <TextBlock Grid.Column="2" Text="Feedback Percentage (more than):" />
+                <Grid Grid.Column="3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Slider
+                        Maximum="99.99"
+                        Minimum="0"
+                        SmallChange="0.5"
+                        Value="{Binding Path=Filter.FeedbackPercent, Mode=TwoWay}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Path=Filter.FeedbackPercent, Mode=OneWay, StringFormat='{}{0:00.00}%'}" />
+                </Grid>
+
+
+                <TextBlock
+                    Grid.Row="1"
+                    VerticalAlignment="Bottom"
+                    Text="Allowed Sellers:" />
+                <StackPanel
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <Button Command="{Binding Path=SelectAllowedSellersCommand, Mode=OneTime}" ToolTip="Clear">
+                        <Image Width="16" Source="/Assets/File16.png" />
+                    </Button>
+                    <Button Command="{Binding Path=ClearAllowedSellersCommand, Mode=OneTime}" ToolTip="Select file...">
+                        <Image Width="16" Source="/Assets/Clear16.png" />
+                    </Button>
+                </StackPanel>
+                <ListBox
+                    Grid.Row="2"
+                    Grid.ColumnSpan="2"
+                    ItemsSource="{Binding Path=Filter.AllowedSellers, Mode=OneWay}" />
+
+                <TextBlock
+                    Grid.Row="1"
+                    Grid.Column="2"
+                    VerticalAlignment="Bottom"
+                    Text="Restricted Sellers:" />
+                <StackPanel
+                    Grid.Row="1"
+                    Grid.Column="4"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+                    <Button Command="{Binding Path=SelectRestrictedSellersCommand, Mode=OneTime}" ToolTip="Select file...">
+                        <Image Width="16" Source="/Assets/File16.png" />
+                    </Button>
+                    <Button Command="{Binding Path=ClearRestrictedSellersCommand, Mode=OneTime}" ToolTip="Clear">
+                        <Image Width="16" Source="/Assets/Clear16.png" />
+                    </Button>
+                </StackPanel>
+                <ListBox
+                    Grid.Row="2"
+                    Grid.Column="2"
+                    Grid.ColumnSpan="2"
+                    ItemsSource="{Binding Path=Filter.RestrictedSellers, Mode=OneWay}" />
+            </Grid>
+        </GroupBox>
+
         <DataGrid
-            Grid.Row="2"
+            Grid.Row="3"
             Grid.ColumnSpan="3"
             IsReadOnly="True"
             ItemsSource="{Binding Path=SearchQueries, Mode=OneWay}">
@@ -123,7 +205,7 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Row="3" Grid.ColumnSpan="3">
+        <Grid Grid.Row="4" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
@@ -133,7 +215,7 @@
             <Button Grid.Row="3" Command="{Binding Path=SearchCommand, Mode=OneTime}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Assets/Work16.png" />
-                    <TextBlock Text="Scrap Data" />
+                    <TextBlock Text="Scrap Books Data" />
                 </StackPanel>
             </Button>
             <Image
@@ -145,7 +227,7 @@
             <TextBlock
                 Grid.Column="3"
                 VerticalAlignment="Center"
-                Text="Scraping data from eBay..."
+                Text="Scraping books data from eBay..."
                 Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}" />
         </Grid>
     </Grid>

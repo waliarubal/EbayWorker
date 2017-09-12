@@ -91,7 +91,7 @@ namespace EbayWorker.Models
 
         #endregion
 
-        internal void Search(ref HtmlWeb parser)
+        internal void Search(ref HtmlWeb parser, SearchFilter filter)
         {
             var url = new UriBuilder();
             url.Scheme = "https";
@@ -123,17 +123,21 @@ namespace EbayWorker.Models
             }
 
             HtmlNode htmlNode;
-            foreach(var book in Books)
+            BookModel currentBook;
+            var count = _books.Count;
+            for(var index = count - 1; index >= 0; index--)
             {
-                rootNode = Load(ref parser, book.Url);
+                currentBook = _books[index];
+
+                rootNode = Load(ref parser, currentBook.Url);
                 if (rootNode == null)
                     continue;
 
                 htmlNode = rootNode.SelectSingleNode("//div[@itemprop='itemCondition']");
                 if (htmlNode != null)
                 {
-                    book.Condition = (BookCondition)Enum.Parse(_conditionType, htmlNode.InnerText.Replace(" ", string.Empty));
-                    switch (book.Condition)
+                    currentBook.Condition = (BookCondition)Enum.Parse(_conditionType, htmlNode.InnerText.Replace(" ", string.Empty));
+                    switch (currentBook.Condition)
                     {
                         case BookCondition.BrandNew:
                             BrandNewCount++;
@@ -159,7 +163,7 @@ namespace EbayWorker.Models
 
                 htmlNode = rootNode.SelectSingleNode("//span[@itemprop='price']");
                 if (htmlNode != null)
-                    book.Price = decimal.Parse(htmlNode.Attributes["content"].Value);
+                    currentBook.Price = decimal.Parse(htmlNode.Attributes["content"].Value);
                 else
                 {
                     // retrieve discounted price
@@ -173,16 +177,53 @@ namespace EbayWorker.Models
                                 priceBuilder.Append(c);
                         }
                         if (priceBuilder.Length > 0)
-                            book.Price = decimal.Parse(priceBuilder.ToString());
+                            currentBook.Price = decimal.Parse(priceBuilder.ToString());
                     }
+                }
+
+                currentBook.Seller = new SellerModel();
+
+                htmlNode = rootNode.SelectSingleNode("//span[@class='mbg-nw']");
+                if (htmlNode != null)
+                    currentBook.Seller.Name = htmlNode.InnerText;
+
+                htmlNode = rootNode.SelectSingleNode("//a[starts-with(@title,'feedback score:')]");
+                if (htmlNode != null)
+                    currentBook.Seller.FeedbackScore = long.Parse(htmlNode.InnerText);
+
+                htmlNode = rootNode.SelectSingleNode("//div[@id='si-fb']");
+                if (htmlNode != null)
+                {
+                    var parts = htmlNode.InnerText.Split('%');
+                    if (parts.Length > 0)
+                        currentBook.Seller.FeedbackPercent = decimal.Parse(parts[0]);
                 }
 
                 htmlNode = rootNode.SelectSingleNode("//h2[@itemprop='productID']");
                 if (htmlNode != null)
-                    book.Isbn = htmlNode.InnerText;
+                    currentBook.Isbn = htmlNode.InnerText;
+
+                if (!IncludeBook(currentBook, filter))
+                    RemoveBook(currentBook);
             }
 
             Status = SearchStatus.Complete;
+        }
+
+        bool IncludeBook(BookModel book, SearchFilter filter)
+        {
+            var seller = book.Seller;
+
+            if (filter.FeedbackScore > seller.FeedbackScore || filter.FeedbackPercent > seller.FeedbackPercent)
+                return false;
+
+            if (filter.AllowedSellers != null && !filter.AllowedSellers.Contains(seller.Name))
+                return false;
+
+            if (filter.RestrictedSellers != null && filter.RestrictedSellers.Contains(seller.Name))
+                return false;
+
+            return true;
         }
 
         HtmlNode Load(ref HtmlWeb parser, Uri uri)

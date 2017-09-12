@@ -12,10 +12,23 @@ namespace EbayWorker.ViewModels
     public class HomeViewModel: ViewModelBase
     {
         string _inputFilePath, _outputDirectoryPath;
+        SearchFilter _filter;
         List<SearchModel> _searchQueries;
-        CommandBase _selectInputFile, _search, _showSearchQuery;
+        
+        CommandBase _selectInputFile, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
 
         #region properties
+
+        public SearchFilter Filter
+        {
+            get
+            {
+                if (_filter == null)
+                    _filter = new SearchFilter();
+
+                return _filter;
+            }
+        }
 
         public string InputFilePath
         {
@@ -28,12 +41,14 @@ namespace EbayWorker.ViewModels
             get { return _outputDirectoryPath; }
             private set { Set("OutputDirectoryPath", ref _outputDirectoryPath, value); }
         }
+        
 
         public List<SearchModel> SearchQueries
         {
             get { return _searchQueries; }
             private set { Set("SearchQueries", ref _searchQueries, value); }
         }
+        
 
         #endregion
 
@@ -75,7 +90,66 @@ namespace EbayWorker.ViewModels
             }
         }
 
+        public CommandBase SelectAllowedSellersCommand
+        {
+            get
+            {
+                if (_selectAllowedSellers == null)
+                    _selectAllowedSellers = new RelayCommand<object, HashSet<string>>(SelectSellers, (sellers) => Filter.AllowedSellers = sellers);
+
+                return _selectAllowedSellers;
+            }
+        }
+
+        public CommandBase SelectRestrictedSellersCommand
+        {
+            get
+            {
+                if (_selectRestrictedSellers == null)
+                    _selectRestrictedSellers = new RelayCommand<object, HashSet<string>>(SelectSellers, (sellers) => Filter.RestrictedSellers = sellers);
+
+                return _selectRestrictedSellers;
+            }
+        }
+
+        public CommandBase ClearAllowedSellersCommand
+        {
+            get
+            {
+                if (_clearAllowedSellers == null)
+                    _clearAllowedSellers = new RelayCommand(() => Filter.AllowedSellers = null);
+
+                return _clearAllowedSellers;
+            }
+        }
+
+        public CommandBase ClearRestrictedSellersCommand
+        {
+            get
+            {
+                if (_clearRestrictedSellers == null)
+                    _clearRestrictedSellers = new RelayCommand(() => Filter.RestrictedSellers = null);
+
+                return _clearRestrictedSellers;
+            }
+        }
+
         #endregion
+
+        HashSet<string> SelectSellers(object parameter)
+        {
+            var fileName = SelectFile();
+            if (string.IsNullOrEmpty(fileName))
+                return null;
+
+            var sellerNames = File.ReadAllLines(fileName);
+            var sellers = new HashSet<string>();
+            foreach (var sellerName in sellerNames)
+                if (!sellers.Contains(sellerName))
+                    sellers.Add(sellerName);
+
+            return sellers;
+        }
 
         void ShowSearchQuery(SearchModel searchQuery)
         {
@@ -91,24 +165,18 @@ namespace EbayWorker.ViewModels
             var parser = new HtmlWeb();
             foreach(var query in SearchQueries)
             {
-                query.Search(ref parser);
+                query.Search(ref parser, _filter);
             }
         }
 
 
         void SelectInputFile()
         {
-            var openFile = new OpenFileDialog();
-            openFile.AddExtension = true;
-            openFile.CheckFileExists = true;
-            openFile.CheckPathExists = true;
-            openFile.Filter = "Text Files|*.txt";
-            openFile.FilterIndex = 0;
-            openFile.Multiselect = false;
-            if (openFile.ShowDialog() != true)
+            var fileName = SelectFile();
+            if (string.IsNullOrEmpty(fileName))
                 return;
 
-            InputFilePath = openFile.FileName;
+            InputFilePath = fileName;
 
             var isbns = File.ReadAllLines(InputFilePath);
             var searchQueries = new List<SearchModel>();
@@ -120,6 +188,21 @@ namespace EbayWorker.ViewModels
                 searchQueries.Add(search);
             }
             SearchQueries = searchQueries;
+        }
+
+        string SelectFile()
+        {
+            var openFile = new OpenFileDialog();
+            openFile.AddExtension = true;
+            openFile.CheckFileExists = true;
+            openFile.CheckPathExists = true;
+            openFile.Filter = "Text Files|*.txt";
+            openFile.FilterIndex = 0;
+            openFile.Multiselect = false;
+            if (openFile.ShowDialog() != true)
+                return null;
+
+            return openFile.FileName;
         }
     }
 }

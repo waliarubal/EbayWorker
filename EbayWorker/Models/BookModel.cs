@@ -16,13 +16,18 @@ namespace EbayWorker.Models
     public class BookModel: NotificationBase
     {
         Uri _url;
-        string _code;
-        string _isbn;
-        string _title;
+        string _code, _isbn, _title;
         decimal _price;
         BookCondition _condition;
+        SellerModel _seller;
 
         #region properties
+
+        public SellerModel Seller
+        {
+            get { return _seller; }
+            set { Set("Seller", ref _seller, value); }
+        }
 
         public Uri Url
         {

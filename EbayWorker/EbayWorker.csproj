@@ -81,7 +81,9 @@
     <Compile Include="Helpers\Base\ViewModelBase.cs" />
     <Compile Include="Helpers\Extensions.cs" />
     <Compile Include="Models\BookModel.cs" />
+    <Compile Include="Models\SearchFilter.cs" />
     <Compile Include="Models\SearchModel.cs" />
+    <Compile Include="Models\SellerModel.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />
     <Compile Include="ViewModels\SearchViewModel.cs" />
     <Compile Include="Views\HomeView.xaml.cs">
@@ -172,6 +174,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\MicrosoftEdge16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Clear16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
