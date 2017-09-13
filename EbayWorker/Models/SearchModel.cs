@@ -106,7 +106,14 @@ namespace EbayWorker.Models
             if (rootNode == null)
                 return;
 
-            foreach (var node in rootNode.SelectNodes("//a[@class='vip']"))
+            var nodes = rootNode.SelectNodes("//a[@class='vip']");
+            if (nodes == null || nodes.Count == 0)
+            {
+                Status = SearchStatus.Failed;
+                return;
+            }
+
+            foreach (var node in nodes)
             {
                 var book = new BookModel();
                 book.Title = node.InnerText;

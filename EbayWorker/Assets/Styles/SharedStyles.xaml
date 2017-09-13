@@ -6,6 +6,7 @@
     <c:SearchStatusToImageSourceConverter x:Key="SearchStatusToImageSourceConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <c:EnumToStringConverter x:Key="EnumToStringConverter" />
+    <c:InverseBooleanConverter x:Key="InverseBooleanConverter" />
 
     <Style x:Key="BaseStyle" TargetType="FrameworkElement">
         <Setter Property="Margin" Value="2" />

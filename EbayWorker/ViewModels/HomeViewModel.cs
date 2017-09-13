@@ -6,6 +6,7 @@ using HtmlAgilityPack;
 using Microsoft.Win32;
 using System.Collections.Generic;
 using System.IO;
+using Forms = System.Windows.Forms;
 
 namespace EbayWorker.ViewModels
 {
@@ -15,7 +16,7 @@ namespace EbayWorker.ViewModels
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
         
-        CommandBase _selectInputFile, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
+        CommandBase _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
 
         #region properties
 
@@ -62,6 +63,20 @@ namespace EbayWorker.ViewModels
                     _selectInputFile = new RelayCommand(SelectInputFile);
 
                 return _selectInputFile;
+            }
+        }
+
+        public CommandBase SelectOutputDirectoryCommand
+        {
+            get
+            {
+                if (_selectOutputDirectory == null)
+                {
+                    _selectOutputDirectory = new RelayCommand(() => OutputDirectoryPath = SelectDirectory());
+                    _selectOutputDirectory.IsSynchronous = true;
+                }
+
+                return _selectOutputDirectory;
             }
         }
 
@@ -142,7 +157,7 @@ namespace EbayWorker.ViewModels
             if (string.IsNullOrEmpty(fileName))
                 return null;
 
-            var sellerNames = File.ReadAllLines(fileName);
+            var sellerNames = SplitData(fileName);
             var sellers = new HashSet<string>();
             foreach (var sellerName in sellerNames)
                 if (!sellers.Contains(sellerName))
@@ -178,16 +193,27 @@ namespace EbayWorker.ViewModels
 
             InputFilePath = fileName;
 
-            var isbns = File.ReadAllLines(InputFilePath);
+            var keywoards = SplitData(fileName);
             var searchQueries = new List<SearchModel>();
-            foreach(var isbn in isbns)
+            foreach (var keywoard in keywoards)
             {
                 var search = new SearchModel();
-                search.Keywoard = isbn;
+                search.Keywoard = keywoard;
                 search.Category = Category.Books;
                 searchQueries.Add(search);
             }
             SearchQueries = searchQueries;
+        }
+
+        string SelectDirectory()
+        {
+            var directoryBrowser = new Forms.FolderBrowserDialog();
+            directoryBrowser.ShowNewFolderButton = true;
+            directoryBrowser.Description = "Select Directory";
+            if (directoryBrowser.ShowDialog() == Forms.DialogResult.OK)
+                return directoryBrowser.SelectedPath;
+
+            return null;
         }
 
         string SelectFile()
@@ -196,13 +222,31 @@ namespace EbayWorker.ViewModels
             openFile.AddExtension = true;
             openFile.CheckFileExists = true;
             openFile.CheckPathExists = true;
-            openFile.Filter = "Text Files|*.txt";
+            openFile.Filter = "Text Files|*.txt|CSV Files|*.csv";
             openFile.FilterIndex = 0;
             openFile.Multiselect = false;
-            if (openFile.ShowDialog() != true)
-                return null;
+            if (openFile.ShowDialog() == true)
+                return openFile.FileName;
 
-            return openFile.FileName;
+            return null;
+        }
+
+        string[] SplitData(string fileName)
+        {
+            var fileInfo = new FileInfo(fileName);
+
+            string[] keywoards = null;
+            switch (fileInfo.Extension)
+            {
+                case ".txt":
+                    keywoards = File.ReadAllLines(fileInfo.FullName);
+                    break;
+
+                case ".csv":
+                    keywoards = File.ReadAllText(fileInfo.FullName).Split(',');
+                    break;
+            }
+            return keywoards;
         }
     }
 }

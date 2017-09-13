@@ -43,7 +43,7 @@
             Cursor="Help"
             IsReadOnly="True"
             Text="{Binding Path=InputFilePath, Mode=OneWay}"
-            ToolTip="Select input file containing ISBN (International Standard Book Number) codes." />
+            ToolTip="Input file containing ISBN (International Standard Book Number) codes." />
         <Button
             Grid.Column="2"
             Command="{Binding Path=SelectInputFileCommand, Mode=OneTime}"
@@ -58,10 +58,11 @@
             Cursor="Help"
             IsReadOnly="True"
             Text="{Binding Path=OutputDirectoryPath, Mode=OneWay}"
-            ToolTip="Selet output directory." />
+            ToolTip="Output directory." />
         <Button
             Grid.Row="1"
             Grid.Column="2"
+            Command="{Binding Path=SelectOutputDirectoryCommand, Mode=OneTime}"
             ToolTip="Select directory...">
             <Image Source="/Assets/Folder16.png" />
         </Button>
@@ -70,7 +71,7 @@
             <GroupBox.Header>
                 <CheckBox Content="Seller Filters" IsChecked="{Binding Path=Filter.IsFilterEnabled, Mode=TwoWay}" />
             </GroupBox.Header>
-            <Grid IsEnabled="{Binding Path=IsFilterEnabled, Mode=OneWay}">
+            <Grid IsEnabled="{Binding Path=Filter.IsFilterEnabled, Mode=OneWay}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -110,10 +111,10 @@
                     Grid.Column="1"
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
-                    <Button Command="{Binding Path=SelectAllowedSellersCommand, Mode=OneTime}" ToolTip="Clear">
+                    <Button Command="{Binding Path=SelectAllowedSellersCommand, Mode=OneTime}" ToolTip="Select file...">
                         <Image Width="16" Source="/Assets/File16.png" />
                     </Button>
-                    <Button Command="{Binding Path=ClearAllowedSellersCommand, Mode=OneTime}" ToolTip="Select file...">
+                    <Button Command="{Binding Path=ClearAllowedSellersCommand, Mode=OneTime}" ToolTip="Clear">
                         <Image Width="16" Source="/Assets/Clear16.png" />
                     </Button>
                 </StackPanel>
@@ -193,7 +194,10 @@
                 <DataGridTemplateColumn>
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Button Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Mode=OneTime, Path=DataContext.ShowSearchQueryCommand}" CommandParameter="{Binding}">
+                            <Button
+                                Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Mode=OneTime, Path=DataContext.ShowSearchQueryCommand}"
+                                CommandParameter="{Binding}"
+                                IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Mode=OneWay, Path=DataContext.SearchCommand.IsExecuting, Converter={StaticResource ResourceKey=InverseBooleanConverter}}">
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Assets/Book16.png" />
                                     <TextBlock Margin="4,0" Text="Details..." />
