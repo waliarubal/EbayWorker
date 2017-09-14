@@ -7,6 +7,7 @@
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <c:EnumToStringConverter x:Key="EnumToStringConverter" />
     <c:InverseBooleanConverter x:Key="InverseBooleanConverter" />
+    <c:SearchStatusToVisibilityConverter x:Key="SearchStatusToVisibilityConverter" />
 
     <Style x:Key="BaseStyle" TargetType="FrameworkElement">
         <Setter Property="Margin" Value="2" />
@@ -19,6 +20,9 @@
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="ListBox" />
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="Button" />
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="Image" />
+    <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="Slider">
+        <Setter Property="TickPlacement" Value="BottomRight" />
+    </Style>
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="DataGrid">
         <Setter Property="AlternatingRowBackground" Value="WhiteSmoke" />
         <Setter Property="AutoGenerateColumns" Value="False" />

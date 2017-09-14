@@ -104,7 +104,10 @@ namespace EbayWorker.Models
 
             var rootNode = Load(ref parser, url.Uri);
             if (rootNode == null)
+            {
+                Status = SearchStatus.Failed;
                 return;
+            }
 
             var nodes = rootNode.SelectNodes("//a[@class='vip']");
             if (nodes == null || nodes.Count == 0)
@@ -138,7 +141,10 @@ namespace EbayWorker.Models
 
                 rootNode = Load(ref parser, currentBook.Url);
                 if (rootNode == null)
+                {
+                    Status = SearchStatus.Failed;
                     continue;
+                }
 
                 htmlNode = rootNode.SelectSingleNode("//div[@itemprop='itemCondition']");
                 if (htmlNode != null)
@@ -214,7 +220,9 @@ namespace EbayWorker.Models
                     RemoveBook(currentBook);
             }
 
-            Status = SearchStatus.Complete;
+            // mark query complete only when data for all books is scraped
+            if (Status != SearchStatus.Failed)
+                Status = SearchStatus.Complete;
         }
 
         bool IncludeBook(BookModel book, SearchFilter filter)

@@ -23,7 +23,7 @@ namespace EbayWorker.Converters
 
                 case SearchStatus.NotStarted:
                 default:
-                    return string.Format(uriFormat, string.Empty);
+                    return null;
             }
         }
 

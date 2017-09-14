@@ -80,6 +80,7 @@
     <Compile Include="Converters\EnumToStringConverter.cs" />
     <Compile Include="Converters\InverseBooleanConverter.cs" />
     <Compile Include="Converters\SearchStatusToImageSourceConverter.cs" />
+    <Compile Include="Converters\SearchStatusToVisibilityConverter.cs" />
     <Compile Include="Helpers\Base\ViewModelBase.cs" />
     <Compile Include="Helpers\Extensions.cs" />
     <Compile Include="Models\BookModel.cs" />

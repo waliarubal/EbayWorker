@@ -4,8 +4,10 @@ using EbayWorker.Models;
 using EbayWorker.Views;
 using HtmlAgilityPack;
 using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using Forms = System.Windows.Forms;
 
 namespace EbayWorker.ViewModels
@@ -13,12 +15,24 @@ namespace EbayWorker.ViewModels
     public class HomeViewModel: ViewModelBase
     {
         string _inputFilePath, _outputDirectoryPath;
+        int _parallelQueries;
+        bool _failedQueriesOnly;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
         
         CommandBase _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
 
+        public HomeViewModel()
+        {
+            _parallelQueries = 1;
+        }
+
         #region properties
+
+        public int MaxParallelQueries
+        {
+            get { return Environment.ProcessorCount; }
+        }
 
         public SearchFilter Filter
         {
@@ -42,14 +56,25 @@ namespace EbayWorker.ViewModels
             get { return _outputDirectoryPath; }
             private set { Set("OutputDirectoryPath", ref _outputDirectoryPath, value); }
         }
-        
+
+        public int ParallelQueries
+        {
+            get { return _parallelQueries; }
+            set { Set("ParallelQueries", ref _parallelQueries, value); }
+        }
 
         public List<SearchModel> SearchQueries
         {
             get { return _searchQueries; }
             private set { Set("SearchQueries", ref _searchQueries, value); }
         }
-        
+
+        public bool FailedQueriesOnly
+        {
+            get { return _failedQueriesOnly; }
+            set { Set("FailedQueriesOnly", ref _failedQueriesOnly, value); }
+        }
+
 
         #endregion
 
@@ -177,13 +202,22 @@ namespace EbayWorker.ViewModels
             if (SearchQueries == null)
                 return;
 
-            var parser = new HtmlWeb();
-            foreach(var query in SearchQueries)
-            {
-                query.Search(ref parser, _filter);
-            }
-        }
+            var parallelOptions = new ParallelOptions();
+            parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
 
+            var parser = new HtmlWeb();
+            Parallel.ForEach(SearchQueries, parallelOptions, query =>
+            {
+                var status = query.Status;
+                if (status == SearchStatus.Working)
+                    return;
+
+                if (FailedQueriesOnly && status != SearchStatus.Complete)
+                    query.Search(ref parser, Filter);
+                else
+                    query.Search(ref parser, Filter);
+            });
+        }
 
         void SelectInputFile()
         {

@@ -27,6 +27,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height=".75*" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
@@ -67,7 +68,20 @@
             <Image Source="/Assets/Folder16.png" />
         </Button>
 
-        <GroupBox Grid.Row="2" Grid.ColumnSpan="3">
+        <TextBlock Grid.Row="2" Text="Parallel Queries:" />
+        <Slider
+            Grid.Row="2"
+            Grid.Column="1"
+            Maximum="{Binding Path=MaxParallelQueries, Mode=OneTime}"
+            Minimum="1"
+            TickFrequency="1"
+            Value="{Binding Path=ParallelQueries, Mode=TwoWay}" />
+        <TextBlock
+            Grid.Row="2"
+            Grid.Column="2"
+            Text="{Binding Path=ParallelQueries, Mode=OneWay}" />
+
+        <GroupBox Grid.Row="3" Grid.ColumnSpan="3">
             <GroupBox.Header>
                 <CheckBox Content="Seller Filters" IsChecked="{Binding Path=Filter.IsFilterEnabled, Mode=TwoWay}" />
             </GroupBox.Header>
@@ -97,6 +111,7 @@
                         Maximum="99.99"
                         Minimum="0"
                         SmallChange="0.5"
+                        TickFrequency="10"
                         Value="{Binding Path=Filter.FeedbackPercent, Mode=TwoWay}" />
                     <TextBlock Grid.Column="1" Text="{Binding Path=Filter.FeedbackPercent, Mode=OneWay, StringFormat='{}{0:00.00}%'}" />
                 </Grid>
@@ -149,7 +164,7 @@
         </GroupBox>
 
         <DataGrid
-            Grid.Row="3"
+            Grid.Row="4"
             Grid.ColumnSpan="3"
             IsReadOnly="True"
             ItemsSource="{Binding Path=SearchQueries, Mode=OneWay}">
@@ -197,7 +212,7 @@
                             <Button
                                 Command="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Mode=OneTime, Path=DataContext.ShowSearchQueryCommand}"
                                 CommandParameter="{Binding}"
-                                IsEnabled="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=DataGrid}, Mode=OneWay, Path=DataContext.SearchCommand.IsExecuting, Converter={StaticResource ResourceKey=InverseBooleanConverter}}">
+                                Visibility="{Binding Path=Status, Mode=OneWay, Converter={StaticResource ResourceKey=SearchStatusToVisibilityConverter}}">
                                 <StackPanel Orientation="Horizontal">
                                     <Image Source="/Assets/Book16.png" />
                                     <TextBlock Margin="4,0" Text="Details..." />
@@ -209,8 +224,9 @@
             </DataGrid.Columns>
         </DataGrid>
 
-        <Grid Grid.Row="4" Grid.ColumnSpan="3">
+        <Grid Grid.Row="5" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
@@ -222,14 +238,19 @@
                     <TextBlock Text="Scrap Books Data" />
                 </StackPanel>
             </Button>
+            <CheckBox
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                Content="Execute unfinished and failed search queries only."
+                IsChecked="{Binding Path=FailedQueriesOnly, Mode=TwoWay}" />
             <Image
-                Grid.Column="2"
+                Grid.Column="3"
                 VerticalAlignment="Center"
                 Source="/Assets/refresh16.png"
                 Style="{StaticResource ResourceKey=Spinner}"
                 Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}" />
             <TextBlock
-                Grid.Column="3"
+                Grid.Column="4"
                 VerticalAlignment="Center"
                 Text="Scraping books data from eBay..."
                 Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}" />
