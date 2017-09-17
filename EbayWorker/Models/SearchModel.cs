@@ -1,4 +1,5 @@
-﻿using EbayWorker.Helpers.Base;
+﻿using EbayWorker.Helpers;
+using EbayWorker.Helpers.Base;
 using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,9 @@ namespace EbayWorker.Models
 
     public class SearchModel: NotificationBase
     {
+        const int ResultsPerPage = 200;
+        const string UnitedStatesOnly = "LH_PrefLoc=1&_sargn=-1&saslc=1";
+
         string _keywoard;
         Category _category;
         SearchStatus _status;
@@ -91,18 +95,18 @@ namespace EbayWorker.Models
 
         #endregion
 
-        internal void Search(ref HtmlWeb parser, SearchFilter filter)
+        internal void Search(ref ExtendedWebClient client, ref HtmlDocument parser, SearchFilter filter)
         {
             var url = new UriBuilder();
             url.Scheme = "https";
             url.Host = "www.ebay.com";
             url.Path = "sch/i.html";
-            url.Query = string.Format("_nkw={0}&_sacat={1}", Keywoard, (int)Category);
+            url.Query = string.Format("_nkw={0}&_sacat={1}&_ipg={2}&{3}", Keywoard, (int)Category, ResultsPerPage, UnitedStatesOnly);
 
             Status = SearchStatus.Working;
             Reset();
 
-            var rootNode = Load(ref parser, url.Uri);
+            var rootNode = Load(ref client, ref parser, url.Uri);
             if (rootNode == null)
             {
                 Status = SearchStatus.Failed;
@@ -139,7 +143,7 @@ namespace EbayWorker.Models
             {
                 currentBook = _books[index];
 
-                rootNode = Load(ref parser, currentBook.Url);
+                rootNode = Load(ref client, ref parser, currentBook.Url);
                 if (rootNode == null)
                 {
                     Status = SearchStatus.Failed;
@@ -186,7 +190,7 @@ namespace EbayWorker.Models
                         var priceBuilder = new StringBuilder();
                         foreach(char c in htmlNode.InnerText)
                         {
-                            if (char.IsNumber(c) || char.IsDigit(c))
+                            if (c == '.' || (c >= '0' && c <= '9'))
                                 priceBuilder.Append(c);
                         }
                         if (priceBuilder.Length > 0)
@@ -229,23 +233,28 @@ namespace EbayWorker.Models
         {
             var seller = book.Seller;
 
-            if (filter.FeedbackScore > seller.FeedbackScore || filter.FeedbackPercent > seller.FeedbackPercent)
+            if (filter.CheckFeedbackScore && filter.FeedbackScore > seller.FeedbackScore)
                 return false;
 
-            if (filter.AllowedSellers != null && !filter.AllowedSellers.Contains(seller.Name))
+            if (filter.CheckFeedbackPercent && filter.FeedbackPercent > seller.FeedbackPercent)
                 return false;
 
-            if (filter.RestrictedSellers != null && filter.RestrictedSellers.Contains(seller.Name))
+            if (filter.CheckAllowedSellers && filter.AllowedSellers != null && !filter.AllowedSellers.Contains(seller.Name))
+                return false;
+
+            if (filter.CheckRestrictedSellers && filter.RestrictedSellers != null && filter.RestrictedSellers.Contains(seller.Name))
                 return false;
 
             return true;
         }
 
-        HtmlNode Load(ref HtmlWeb parser, Uri uri)
+        HtmlNode Load(ref ExtendedWebClient client, ref HtmlDocument parser, Uri uri)
         {
             try
             {
-                return parser.Load(uri).DocumentNode;
+                var html = client.DownloadString(uri);
+                parser.LoadHtml(html);
+                return parser.DocumentNode;
             }
             catch
             {

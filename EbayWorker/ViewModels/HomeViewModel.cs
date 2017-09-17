@@ -4,7 +4,6 @@ using EbayWorker.Models;
 using EbayWorker.Views;
 using HtmlAgilityPack;
 using Microsoft.Win32;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
@@ -24,14 +23,14 @@ namespace EbayWorker.ViewModels
 
         public HomeViewModel()
         {
-            _parallelQueries = 1;
+            _parallelQueries = 5;
         }
 
         #region properties
 
         public int MaxParallelQueries
         {
-            get { return Environment.ProcessorCount; }
+            get { return 10; }
         }
 
         public SearchFilter Filter
@@ -205,17 +204,21 @@ namespace EbayWorker.ViewModels
             var parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
 
-            var parser = new HtmlWeb();
             Parallel.ForEach(SearchQueries, parallelOptions, query =>
             {
                 var status = query.Status;
                 if (status == SearchStatus.Working)
                     return;
 
-                if (FailedQueriesOnly && status != SearchStatus.Complete)
-                    query.Search(ref parser, Filter);
+                var client = new ExtendedWebClient(ParallelQueries);
+                var parser = new HtmlDocument();
+                if (FailedQueriesOnly)
+                {
+                    if (status != SearchStatus.Complete)
+                        query.Search(ref client, ref parser, Filter);
+                }                    
                 else
-                    query.Search(ref parser, Filter);
+                    query.Search(ref client, ref parser, Filter);
             });
         }
 
