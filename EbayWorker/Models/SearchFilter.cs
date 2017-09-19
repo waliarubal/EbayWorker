@@ -7,10 +7,37 @@ namespace EbayWorker.Models
     {
         long _feedbackScore;
         decimal _feedbackPercent;
-        bool _checkFeedbackScore, _checkFeedbakcPercent, _checkAllowedSellers, _checkRestrictedSellers;
+        bool _checkFeedbackScore, _checkFeedbakcPercent, _checkAllowedSellers, _checkRestrictedSellers, _isAuction, _isBuyItNow, _isClassifiedAds;
         HashSet<string> _allowedSellerNames, _restrictedSellerNames;
+        string _location;
+        readonly Dictionary<string, string> _locations;
+
+
+        public SearchFilter()
+        {
+            _locations = new Dictionary<string, string>
+            {
+                { "US Only", "-1&saslc=1" },
+                { "Worldwide", "-1&saslc=2" },
+                { "North America", "-1&saslc=3" },
+                { "South America", "-1&saslc=4" },
+                { "Europe", "-1&saslc=5" },
+                { "Asia", "-1&saslc=6" }
+            };
+        }
 
         #region properties
+
+        public IEnumerable<string> Locations
+        {
+            get { return _locations.Keys; }
+        }
+
+        public string Location
+        {
+            get { return _location; }
+            set { Set("Location", ref _location, value); }
+        }
 
         public bool CheckFeedbackScore
         {
@@ -60,6 +87,50 @@ namespace EbayWorker.Models
             set { Set("RestrictedSellers", ref _restrictedSellerNames, value); }
         }
 
+        public bool IsAuction
+        {
+            get { return _isAuction; }
+            set
+            {
+                Set("IsAuction", ref _isAuction, value);
+                if (value)
+                    IsClassifiedAds = false;
+            }
+        }
+
+        public bool IsBuyItNow
+        {
+            get { return _isBuyItNow; }
+            set
+            {
+                Set("IsBuyItNow", ref _isBuyItNow, value);
+                if (value)
+                    IsClassifiedAds = false;
+            }
+        }
+
+        public bool IsClassifiedAds
+        {
+            get { return _isClassifiedAds; }
+            set
+            {
+                Set("IsClassifiedAds", ref _isClassifiedAds, value);
+                if (value)
+                {
+                    IsBuyItNow = false;
+                    IsAuction = false;
+                }
+            }
+        }
+
         #endregion
+
+        internal string GetLocation()
+        {
+            if (string.IsNullOrEmpty(Location))
+                return null;
+
+            return _locations[Location];
+        }
     }
 }

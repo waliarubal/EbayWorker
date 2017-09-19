@@ -23,7 +23,6 @@ namespace EbayWorker.Models
     public class SearchModel: NotificationBase
     {
         const int ResultsPerPage = 200;
-        const string UnitedStatesOnly = "LH_PrefLoc=1&_sargn=-1&saslc=1";
 
         string _keywoard;
         Category _category;
@@ -97,11 +96,25 @@ namespace EbayWorker.Models
 
         internal void Search(ref ExtendedWebClient client, ref HtmlDocument parser, SearchFilter filter)
         {
+            var queryStringBuilder = new StringBuilder();
+            queryStringBuilder.AppendFormat("_nkw={0}&", Keywoard);
+            queryStringBuilder.AppendFormat("_sacat={0}&", (int)Category);
+            queryStringBuilder.AppendFormat("_ipg={0}", ResultsPerPage);
+            var location = filter.GetLocation();
+            if (!string.IsNullOrEmpty(location))
+                queryStringBuilder.AppendFormat("&LH_PrefLoc=1&_sargn={0}", location);
+            if (filter.IsAuction)
+                queryStringBuilder.Append("&LH_Auction=1");
+            if (filter.IsBuyItNow)
+                queryStringBuilder.Append("&LH_BIN=1");
+            if (filter.IsClassifiedAds)
+                queryStringBuilder.Append("&LH_CAds=1");
+
             var url = new UriBuilder();
             url.Scheme = "https";
             url.Host = "www.ebay.com";
             url.Path = "sch/i.html";
-            url.Query = string.Format("_nkw={0}&_sacat={1}&_ipg={2}&{3}", Keywoard, (int)Category, ResultsPerPage, UnitedStatesOnly);
+            url.Query = queryStringBuilder.ToString();
 
             Status = SearchStatus.Working;
             Reset();
@@ -116,7 +129,8 @@ namespace EbayWorker.Models
             var nodes = rootNode.SelectNodes("//a[@class='vip']");
             if (nodes == null || nodes.Count == 0)
             {
-                Status = SearchStatus.Failed;
+                // no listing found
+                Status = SearchStatus.Complete;
                 return;
             }
 

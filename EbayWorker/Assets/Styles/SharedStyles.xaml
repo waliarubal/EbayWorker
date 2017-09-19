@@ -14,6 +14,7 @@
     </Style>
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="TextBlock" />
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="TextBox" />
+    <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="ComboBox" />
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="CheckBox" />
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="Grid" />
     <Style BasedOn="{StaticResource ResourceKey=BaseStyle}" TargetType="GroupBox" />

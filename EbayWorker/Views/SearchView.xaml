@@ -8,8 +8,8 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:EbayWorker.ViewModels"
     Title="Search Query"
-    Width="720"
-    Height="480"
+    Width="800"
+    Height="600"
     ResizeMode="NoResize"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
@@ -67,7 +67,7 @@
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="ISBN" />
                 <DataGridTextColumn
-                    Width="160"
+                    Width="200"
                     Binding="{Binding Path=Title, Mode=OneWay}"
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Title" />
@@ -80,7 +80,7 @@
                     Binding="{Binding Path=Condition, Mode=OneWay, Converter={StaticResource ResourceKey=EnumToStringConverter}}"
                     Header="Condition" />
                 <DataGridTextColumn
-                    Width="100"
+                    Width="140"
                     Binding="{Binding Path=Seller.Name, Mode=OneWay}"
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Seller" />
