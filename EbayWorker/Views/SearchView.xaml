@@ -73,7 +73,7 @@
                     Header="Title" />
                 <DataGridTextColumn
                     Width="80"
-                    Binding="{Binding Path=Price, Mode=OneWay}"
+                    Binding="{Binding Path=Price, Mode=OneWay, StringFormat='{}{0:####0.00}'}"
                     Header="Price" />
                 <DataGridTextColumn
                     Width="80"

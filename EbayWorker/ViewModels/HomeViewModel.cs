@@ -30,7 +30,7 @@ namespace EbayWorker.ViewModels
 
         public int MaxParallelQueries
         {
-            get { return 10; }
+            get { return 20; }
         }
 
         public SearchFilter Filter
@@ -210,15 +210,14 @@ namespace EbayWorker.ViewModels
                 if (status == SearchStatus.Working)
                     return;
 
-                var client = new ExtendedWebClient(ParallelQueries);
                 var parser = new HtmlDocument();
                 if (FailedQueriesOnly)
                 {
                     if (status != SearchStatus.Complete)
-                        query.Search(ref client, ref parser, Filter);
+                        query.Search(ref parser, Filter, ParallelQueries);
                 }                    
                 else
-                    query.Search(ref client, ref parser, Filter);
+                    query.Search(ref parser, Filter, ParallelQueries);
             });
         }
 

@@ -4,6 +4,7 @@ using HtmlAgilityPack;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace EbayWorker.Models
 {
@@ -94,8 +95,10 @@ namespace EbayWorker.Models
 
         #endregion
 
-        internal void Search(ref ExtendedWebClient client, ref HtmlDocument parser, SearchFilter filter)
+        internal void Search(ref HtmlDocument parser, SearchFilter filter, int parallelQueries)
         {
+            var client = new ExtendedWebClient(parallelQueries);
+
             var queryStringBuilder = new StringBuilder();
             queryStringBuilder.AppendFormat("_nkw={0}&", Keywoard);
             queryStringBuilder.AppendFormat("_sacat={0}&", (int)Category);
@@ -126,6 +129,14 @@ namespace EbayWorker.Models
                 return;
             }
 
+            // change to inner node to decrease DOM traversal
+            rootNode = rootNode.SelectSingleNode("//div[@id='CenterPanel']");
+            if (rootNode == null)
+            {
+                Status = SearchStatus.Failed;
+                return;
+            }
+
             var nodes = rootNode.SelectNodes("//a[@class='vip']");
             if (nodes == null || nodes.Count == 0)
             {
@@ -150,97 +161,125 @@ namespace EbayWorker.Models
                     AddBook(book);
             }
 
-            HtmlNode htmlNode;
-            BookModel currentBook;
-            var count = _books.Count;
-            for(var index = count - 1; index >= 0; index--)
-            {
-                currentBook = _books[index];
+            // process each book in parallel
+            var parallelOptions = new ParallelOptions();
+            parallelOptions.MaxDegreeOfParallelism = parallelQueries;
 
-                rootNode = Load(ref client, ref parser, currentBook.Url);
-                if (rootNode == null)
-                {
-                    Status = SearchStatus.Failed;
-                    continue;
-                }
-
-                htmlNode = rootNode.SelectSingleNode("//div[@itemprop='itemCondition']");
-                if (htmlNode != null)
-                {
-                    currentBook.Condition = (BookCondition)Enum.Parse(_conditionType, htmlNode.InnerText.Replace(" ", string.Empty));
-                    switch (currentBook.Condition)
-                    {
-                        case BookCondition.BrandNew:
-                            BrandNewCount++;
-                            break;
-
-                        case BookCondition.LikeNew:
-                            LikeNewCount++;
-                            break;
-
-                        case BookCondition.VeryGood:
-                            VeryGoodCount++;
-                            break;
-
-                        case BookCondition.Good:
-                            GoodCount++;
-                            break;
-
-                        case BookCondition.Acceptable:
-                            AcceptableCount++;
-                            break;
-                    }
-                }
-
-                htmlNode = rootNode.SelectSingleNode("//span[@itemprop='price']");
-                if (htmlNode != null)
-                    currentBook.Price = decimal.Parse(htmlNode.Attributes["content"].Value);
-                else
-                {
-                    // retrieve discounted price
-                    htmlNode = rootNode.SelectSingleNode("//span[@id='mm-saleDscPrc']");
-                    if (htmlNode != null)
-                    {
-                        var priceBuilder = new StringBuilder();
-                        foreach(char c in htmlNode.InnerText)
-                        {
-                            if (c == '.' || (c >= '0' && c <= '9'))
-                                priceBuilder.Append(c);
-                        }
-                        if (priceBuilder.Length > 0)
-                            currentBook.Price = decimal.Parse(priceBuilder.ToString());
-                    }
-                }
-
-                currentBook.Seller = new SellerModel();
-
-                htmlNode = rootNode.SelectSingleNode("//span[@class='mbg-nw']");
-                if (htmlNode != null)
-                    currentBook.Seller.Name = htmlNode.InnerText;
-
-                htmlNode = rootNode.SelectSingleNode("//a[starts-with(@title,'feedback score:')]");
-                if (htmlNode != null)
-                    currentBook.Seller.FeedbackScore = long.Parse(htmlNode.InnerText);
-
-                htmlNode = rootNode.SelectSingleNode("//div[@id='si-fb']");
-                if (htmlNode != null)
-                {
-                    var parts = htmlNode.InnerText.Split('%');
-                    if (parts.Length > 0)
-                        currentBook.Seller.FeedbackPercent = decimal.Parse(parts[0]);
-                }
-
-                htmlNode = rootNode.SelectSingleNode("//h2[@itemprop='productID']");
-                if (htmlNode != null)
-                    currentBook.Isbn = htmlNode.InnerText;
-
-                if (!IncludeBook(currentBook, filter))
-                    RemoveBook(currentBook);
-            }
+            Parallel.ForEach(_books, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelQueries));
 
             // mark query complete only when data for all books is scraped
             if (Status != SearchStatus.Failed)
                 Status = SearchStatus.Complete;
+        }
+
+        void ProcessBook(BookModel currentBook, SearchFilter filter, int pallelWebRequests)
+        {
+            var bookParser = new HtmlDocument();
+            var client = new ExtendedWebClient(pallelWebRequests);
+
+            var rootNode = Load(ref client, ref bookParser, currentBook.Url);
+            if (rootNode == null)
+            {
+                Status = SearchStatus.Failed;
+                return;
+            }
+
+            var htmlNode = rootNode.SelectSingleNode("//div[@id='BottomPanel']//h2[@itemprop='productID']");
+            if (htmlNode != null)
+                currentBook.Isbn = htmlNode.InnerText;
+
+            // change to inner node to decrease DOM traversal
+            rootNode = rootNode.SelectSingleNode("//div[@id='CenterPanelInternal']");
+            if (rootNode == null)
+            {
+                Status = SearchStatus.Failed;
+                return;
+            }
+
+            var innerRoot = rootNode.SelectSingleNode("//div[@id='LeftSummaryPanel']");
+            if (innerRoot == null)
+            {
+                Status = SearchStatus.Failed;
+                return;
+            }
+
+            htmlNode = innerRoot.SelectSingleNode("//div[@itemprop='itemCondition']");
+            if (htmlNode != null)
+            {
+                BookCondition condition;
+                if (Enum.TryParse(htmlNode.InnerText.Replace(" ", string.Empty), out condition))
+                    currentBook.Condition = condition;
+
+                switch (currentBook.Condition)
+                {
+                    case BookCondition.BrandNew:
+                        BrandNewCount++;
+                        break;
+
+                    case BookCondition.LikeNew:
+                        LikeNewCount++;
+                        break;
+
+                    case BookCondition.VeryGood:
+                        VeryGoodCount++;
+                        break;
+
+                    case BookCondition.Good:
+                        GoodCount++;
+                        break;
+
+                    case BookCondition.Acceptable:
+                        AcceptableCount++;
+                        break;
+                }
+            }
+
+            htmlNode = innerRoot.SelectSingleNode("//span[@itemprop='price']");
+            if (htmlNode != null)
+            {
+                currentBook.Price = decimal.Parse(htmlNode.Attributes["content"].Value);
+
+                // try to extract price if current price is not in USD
+                htmlNode = htmlNode.ParentNode.SelectSingleNode("//span[@id='convbinPrice']");
+                if (htmlNode != null && htmlNode.HasChildNodes)
+                    currentBook.Price = ExtractDecimal(htmlNode.FirstChild.InnerText);
+            }
+            else
+            {
+                // retrieve discounted price
+                htmlNode = rootNode.SelectSingleNode("//span[@id='mm-saleDscPrc']");
+                if (htmlNode != null)
+                    currentBook.Price = ExtractDecimal(htmlNode.InnerText);
+            }
+
+            innerRoot = rootNode.SelectSingleNode("//div[@id='RightSummaryPanel']");
+            if (innerRoot == null)
+            {
+                Status = SearchStatus.Failed;
+                return;
+            }
+
+            // seller details
+            currentBook.Seller = new SellerModel();
+
+            htmlNode = innerRoot.SelectSingleNode("//span[@class='mbg-nw']");
+            if (htmlNode != null)
+                currentBook.Seller.Name = htmlNode.InnerText;
+
+            htmlNode = innerRoot.SelectSingleNode("//a[starts-with(@title,'feedback score:')]");
+            if (htmlNode != null)
+                currentBook.Seller.FeedbackScore = long.Parse(htmlNode.InnerText);
+
+            htmlNode = innerRoot.SelectSingleNode("//div[@id='si-fb']");
+            if (htmlNode != null)
+            {
+                var parts = htmlNode.InnerText.Split('%');
+                if (parts.Length > 0)
+                    currentBook.Seller.FeedbackPercent = decimal.Parse(parts[0]);
+            }
+
+            if (!IncludeBook(currentBook, filter))
+                RemoveBook(currentBook);
         }
 
         bool IncludeBook(BookModel book, SearchFilter filter)
@@ -260,6 +299,20 @@ namespace EbayWorker.Models
                 return false;
 
             return true;
+        }
+
+        decimal ExtractDecimal(string text)
+        {
+            var priceBuilder = new StringBuilder();
+            foreach (char c in text)
+            {
+                if (c == '.' || (c >= '0' && c <= '9'))
+                    priceBuilder.Append(c);
+            }
+            if (priceBuilder.Length > 0)
+                return decimal.Parse(priceBuilder.ToString());
+
+            return default(decimal);
         }
 
         HtmlNode Load(ref ExtendedWebClient client, ref HtmlDocument parser, Uri uri)

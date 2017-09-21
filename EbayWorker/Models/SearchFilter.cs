@@ -60,7 +60,15 @@ namespace EbayWorker.Models
         public decimal FeedbackPercent
         {
             get { return _feedbackPercent; }
-            set { Set("FeedbackPercent", ref _feedbackPercent, value); }
+            set
+            {
+                if (value < 0m)
+                    value = 0m;
+                else if (value > 99.99m)
+                    value = 99.99m;
+
+                Set("FeedbackPercent", ref _feedbackPercent, value);
+            }
         }
 
         public bool CheckAllowedSellers
