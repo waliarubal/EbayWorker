@@ -6,7 +6,7 @@ namespace EbayWorker.Models
     public class SearchFilter: NotificationBase
     {
         long _feedbackScore;
-        decimal _feedbackPercent;
+        decimal _feedbackPercent, _priceMaximum;
         bool _checkFeedbackScore, _checkFeedbakcPercent, _checkAllowedSellers, _checkRestrictedSellers, _isAuction, _isBuyItNow, _isClassifiedAds;
         HashSet<string> _allowedSellerNames, _restrictedSellerNames;
         string _location;
@@ -69,6 +69,12 @@ namespace EbayWorker.Models
 
                 Set("FeedbackPercent", ref _feedbackPercent, value);
             }
+        }
+
+        public decimal MaximumPrice
+        {
+            get { return _priceMaximum; }
+            set { Set("MaximumPrice", ref _priceMaximum, value); }
         }
 
         public bool CheckAllowedSellers

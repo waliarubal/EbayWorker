@@ -10,7 +10,6 @@
     Title="Ebay Worker"
     Width="1024"
     Height="768"
-    ResizeMode="CanMinimize"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>
@@ -67,14 +66,14 @@
             <Image Source="/Assets/Folder16.png" />
         </Button>
 
-
-
         <Grid Grid.Row="2" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width=".3*" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -110,8 +109,14 @@
                 ItemsSource="{Binding Path=Filter.Locations, Mode=OneTime}"
                 SelectedItem="{Binding Path=Filter.Location, Mode=TwoWay}" />
 
+            <TextBlock Grid.Row="5" Text="Price (less than):" />
+            <TextBox
+                Grid.Row="6"
+                Text="{Binding Path=Filter.MaximumPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                TextAlignment="Right" />
+
             <GroupBox
-                Grid.RowSpan="5"
+                Grid.RowSpan="7"
                 Grid.Column="1"
                 Header="Seller Filters">
                 <Grid>
@@ -134,7 +139,8 @@
                     <TextBox
                         Grid.Column="1"
                         IsEnabled="{Binding Path=Filter.CheckFeedbackScore, Mode=OneWay}"
-                        Text="{Binding Path=Filter.FeedbackScore, Mode=TwoWay}" />
+                        Text="{Binding Path=Filter.FeedbackScore, Mode=TwoWay}"
+                        TextAlignment="Right" />
 
                     <CheckBox
                         Grid.Column="2"
@@ -261,7 +267,7 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
                 <DataGridTextColumn
-                    Width="240"
+                    Width="*"
                     Binding="{Binding Path=Keywoard, Mode=OneWay}"
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Search Keywoard" />

@@ -298,6 +298,9 @@ namespace EbayWorker.Models
             if (filter.CheckRestrictedSellers && filter.RestrictedSellers != null && filter.RestrictedSellers.Contains(seller.Name))
                 return false;
 
+            if (filter.MaximumPrice > 0 && book.Price > filter.MaximumPrice)
+                return false;
+
             return true;
         }
 
