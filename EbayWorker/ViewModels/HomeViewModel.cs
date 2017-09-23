@@ -5,28 +5,46 @@ using EbayWorker.Views;
 using HtmlAgilityPack;
 using Microsoft.Win32;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using System.Timers;
 using Forms = System.Windows.Forms;
 
 namespace EbayWorker.ViewModels
 {
     public class HomeViewModel: ViewModelBase
     {
-        string _inputFilePath, _outputDirectoryPath;
-        int _parallelQueries;
+        string _inputFilePath, _outputDirectoryPath, _executionTime;
+        int _parallelQueries, _executedQueries;
         bool _failedQueriesOnly;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
+
+        Timer _timer;
+        Stopwatch _stopWatch;
         
         CommandBase _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
 
         public HomeViewModel()
         {
             _parallelQueries = 5;
+            _executionTime = "00:00:00";
         }
 
         #region properties
+
+        public string ExecutionTime
+        {
+            get { return _executionTime; }
+            private set { Set("ExecutionTime", ref _executionTime, value); }
+        }
+
+        public int ExecutedQueries
+        {
+            get { return _executedQueries; }
+            private set { Set("ExecutedQueries", ref _executedQueries, value); }
+        }
 
         public int MaxParallelQueries
         {
@@ -196,10 +214,41 @@ namespace EbayWorker.ViewModels
             search.ShowDialog();
         }
 
+        void StartTimer()
+        {
+            ExecutionTime = "00:00:00";
+            ExecutedQueries = 0;
+
+            if (_timer == null && _stopWatch == null)
+            {
+                _stopWatch = new Stopwatch();
+
+                _timer = new Timer();
+                _timer.Elapsed += (sender, e) =>
+                {
+                    var time = _stopWatch.Elapsed;
+                    ExecutionTime = string.Format("{0:00}:{1:00}:{2:00}", time.Hours, time.Minutes, time.Seconds);
+                };
+                _timer.Interval = 500;
+            }
+
+            _stopWatch.Start();
+            _timer.Start();
+        }
+
+        void StopTimer()
+        {
+            _stopWatch.Stop();
+            _stopWatch.Reset();
+            _timer.Stop();
+        }
+
         void Search()
         {
             if (SearchQueries == null)
                 return;
+
+            StartTimer();
 
             var parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
@@ -218,7 +267,11 @@ namespace EbayWorker.ViewModels
                 }                    
                 else
                     query.Search(ref parser, Filter, ParallelQueries);
+
+                ExecutedQueries += 1;
             });
+
+            StopTimer();
         }
 
         void SelectInputFile()
@@ -239,6 +292,8 @@ namespace EbayWorker.ViewModels
                 searchQueries.Add(search);
             }
             SearchQueries = searchQueries;
+            ExecutionTime = "00:00:00";
+            ExecutedQueries = 0;
         }
 
         string SelectDirectory()

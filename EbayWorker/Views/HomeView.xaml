@@ -9,7 +9,7 @@
     xmlns:vm="clr-namespace:EbayWorker.ViewModels"
     Title="Ebay Worker"
     Width="1024"
-    Height="768"
+    Height="600"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>
@@ -225,21 +225,29 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <Image
-                VerticalAlignment="Center"
-                Source="/Assets/refresh16.png"
-                Style="{StaticResource ResourceKey=Spinner}"
-                Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}" />
-            <TextBlock
+            <TextBlock VerticalAlignment="Center">
+                <Run Text="Executed " />
+                <Run Text="{Binding Path=ExecutedQueries, Mode=OneWay, FallbackValue=0}" />
+                <Run Text=" of " />
+                <Run Text="{Binding Path=SearchQueries.Count, Mode=OneWay, FallbackValue=0}" />
+                <Run Text=" search queries in " />
+                <Run Text="{Binding Path=ExecutionTime, Mode=OneWay}" />
+                <Run Text="." />
+            </TextBlock>
+            <StackPanel
                 Grid.Column="1"
-                Margin="4,0,0,0"
+                HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                FontWeight="Bold"
-                Text="Scraping books data from eBay..."
-                Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}" />
+                Orientation="Horizontal"
+                Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
+                <Image Source="/Assets/refresh16.png" Style="{StaticResource ResourceKey=Spinner}" />
+                <TextBlock
+                    Margin="4,0,0,0"
+                    FontWeight="Bold"
+                    Text="Scraping books data from ebay..." />
+            </StackPanel>
             <CheckBox
                 Grid.Column="2"
                 VerticalAlignment="Center"
