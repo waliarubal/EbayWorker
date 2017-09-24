@@ -104,8 +104,8 @@ namespace EbayWorker.Models
             queryStringBuilder.AppendFormat("_sacat={0}&", (int)Category);
             queryStringBuilder.AppendFormat("_ipg={0}", ResultsPerPage);
             var location = filter.GetLocation();
-            if (!string.IsNullOrEmpty(location))
-                queryStringBuilder.AppendFormat("&LH_PrefLoc=1&_sargn={0}", location);
+            if (location > 0)
+                queryStringBuilder.AppendFormat("LH_LocatedIn=1&_salic={0}&LH_SubLocation=1", location);
             if (filter.IsAuction)
                 queryStringBuilder.Append("&LH_Auction=1");
             if (filter.IsBuyItNow)

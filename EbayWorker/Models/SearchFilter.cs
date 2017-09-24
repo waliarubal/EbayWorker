@@ -10,19 +10,16 @@ namespace EbayWorker.Models
         bool _checkFeedbackScore, _checkFeedbakcPercent, _checkAllowedSellers, _checkRestrictedSellers, _isAuction, _isBuyItNow, _isClassifiedAds;
         HashSet<string> _allowedSellerNames, _restrictedSellerNames;
         string _location;
-        readonly Dictionary<string, string> _locations;
+        readonly Dictionary<string, int> _locations;
 
 
         public SearchFilter()
         {
-            _locations = new Dictionary<string, string>
+            _locations = new Dictionary<string, int>
             {
-                { "US Only", "-1&saslc=1" },
-                { "Worldwide", "-1&saslc=2" },
-                { "North America", "-1&saslc=3" },
-                { "South America", "-1&saslc=4" },
-                { "Europe", "-1&saslc=5" },
-                { "Asia", "-1&saslc=6" }
+                { "United States", 1 },
+                { "Canada", 2 },
+                { "United Kingdom", 3 }
             };
         }
 
@@ -139,10 +136,10 @@ namespace EbayWorker.Models
 
         #endregion
 
-        internal string GetLocation()
+        internal int GetLocation()
         {
             if (string.IsNullOrEmpty(Location))
-                return null;
+                return 0;
 
             return _locations[Location];
         }

@@ -7,9 +7,10 @@
     xmlns:local="clr-namespace:EbayWorker.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:EbayWorker.ViewModels"
-    Title="Ebay Worker"
+    Title="eBay Worker"
     Width="1024"
     Height="600"
+    Closing="Window_Closing"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>

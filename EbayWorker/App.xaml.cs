@@ -8,5 +8,6 @@ namespace EbayWorker
     /// </summary>
     public partial class App : Application
     {
+       
     }
 }
