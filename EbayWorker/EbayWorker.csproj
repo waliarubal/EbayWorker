@@ -86,7 +86,6 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Helpers\Extensions.cs" />
-    <Compile Include="Helpers\SimpleLog.cs" />
     <Compile Include="Models\BookModel.cs" />
     <Compile Include="Models\SearchFilter.cs" />
     <Compile Include="Models\SearchModel.cs" />
