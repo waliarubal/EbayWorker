@@ -17,7 +17,7 @@ namespace EbayWorker.ViewModels
     {
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
-        bool _failedQueriesOnly;
+        bool _failedQueriesOnly, _scrapBooksInParallel;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
 
@@ -92,6 +92,11 @@ namespace EbayWorker.ViewModels
             set { Set("FailedQueriesOnly", ref _failedQueriesOnly, value); }
         }
 
+        public bool ScrapBooksInParallel
+        {
+            get { return _scrapBooksInParallel; }
+            set { Set("ScrapBooksInParallel", ref _scrapBooksInParallel, value); }
+        }
 
         #endregion
 
@@ -263,10 +268,10 @@ namespace EbayWorker.ViewModels
                 if (FailedQueriesOnly)
                 {
                     if (status != SearchStatus.Complete)
-                        query.Search(ref parser, Filter, ParallelQueries);
+                        query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel);
                 }                    
                 else
-                    query.Search(ref parser, Filter, ParallelQueries);
+                    query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel);
 
                 ExecutedQueries += 1;
             });

@@ -19,9 +19,16 @@ namespace EbayWorker.Models
         string _code, _isbn, _title;
         decimal _price;
         BookCondition _condition;
+        SearchStatus _status;
         SellerModel _seller;
 
         #region properties
+
+        public SearchStatus Status
+        {
+            get { return _status; }
+            set { Set("Status", ref _status, value); }
+        }
 
         public SellerModel Seller
         {

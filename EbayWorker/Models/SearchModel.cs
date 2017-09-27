@@ -95,7 +95,7 @@ namespace EbayWorker.Models
 
         #endregion
 
-        internal void Search(ref HtmlDocument parser, SearchFilter filter, int parallelQueries)
+        internal void Search(ref HtmlDocument parser, SearchFilter filter, int parallelQueries, bool scrapBooksInParallel)
         {
             var client = new ExtendedWebClient(parallelQueries);
 
@@ -162,10 +162,21 @@ namespace EbayWorker.Models
             }
 
             // process each book in parallel
-            var parallelOptions = new ParallelOptions();
-            parallelOptions.MaxDegreeOfParallelism = parallelQueries;
+            if (scrapBooksInParallel)
+            {
+                var parallelOptions = new ParallelOptions();
+                parallelOptions.MaxDegreeOfParallelism = parallelQueries;
 
-            Parallel.ForEach(_books, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelQueries));
+                Parallel.ForEach(_books, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelQueries));
+            }
+            else
+            {
+                for(var index = _books.Count -1; index >= 0; index--)
+                {
+                    var book = _books[index];
+                    ProcessBook(book, filter, 1);
+                }
+            }
 
             // mark query complete only when data for all books is scraped
             if (Status != SearchStatus.Failed)
@@ -177,10 +188,11 @@ namespace EbayWorker.Models
             var bookParser = new HtmlDocument();
             var client = new ExtendedWebClient(pallelWebRequests);
 
+            currentBook.Status = SearchStatus.Working;
             var rootNode = Load(ref client, ref bookParser, currentBook.Url);
             if (rootNode == null)
             {
-                Status = SearchStatus.Failed;
+                currentBook.Status = Status = SearchStatus.Failed;
                 return;
             }
 
@@ -192,14 +204,14 @@ namespace EbayWorker.Models
             rootNode = rootNode.SelectSingleNode("//div[@id='CenterPanelInternal']");
             if (rootNode == null)
             {
-                Status = SearchStatus.Failed;
+                currentBook.Status = Status = SearchStatus.Failed;
                 return;
             }
 
             var innerRoot = rootNode.SelectSingleNode("//div[@id='LeftSummaryPanel']");
             if (innerRoot == null)
             {
-                Status = SearchStatus.Failed;
+                currentBook.Status = Status = SearchStatus.Failed;
                 return;
             }
 
@@ -255,7 +267,7 @@ namespace EbayWorker.Models
             innerRoot = rootNode.SelectSingleNode("//div[@id='RightSummaryPanel']");
             if (innerRoot == null)
             {
-                Status = SearchStatus.Failed;
+                currentBook.Status = Status = SearchStatus.Failed;
                 return;
             }
 
@@ -280,6 +292,8 @@ namespace EbayWorker.Models
 
             if (!IncludeBook(currentBook, filter))
                 RemoveBook(currentBook);
+            else
+                currentBook.Status = SearchStatus.Complete;
         }
 
         bool IncludeBook(BookModel book, SearchFilter filter)
