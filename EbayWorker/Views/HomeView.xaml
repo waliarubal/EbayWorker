@@ -81,6 +81,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock Text="Parallel Queries:" />
@@ -102,7 +103,12 @@
                 Content="Scrap books data in parallel."
                 IsChecked="{Binding Path=ScrapBooksInParallel, Mode=TwoWay}" />
 
-            <GroupBox Grid.Row="3" Header="Buying Formats">
+            <CheckBox
+                Grid.Row="3"
+                Content="Exclude results with no books."
+                IsChecked="{Binding Path=ExcludeEmptyResults, Mode=TwoWay}" />
+
+            <GroupBox Grid.Row="4" Header="Buying Formats">
                 <StackPanel>
                     <CheckBox Content="Auction" IsChecked="{Binding Path=Filter.IsAuction, Mode=TwoWay}" />
                     <CheckBox Content="Buy It Now" IsChecked="{Binding Path=Filter.IsBuyItNow, Mode=TwoWay}" />
@@ -110,20 +116,20 @@
                 </StackPanel>
             </GroupBox>
 
-            <TextBlock Grid.Row="4" Text="Location:" />
+            <TextBlock Grid.Row="5" Text="Location:" />
             <ComboBox
-                Grid.Row="5"
+                Grid.Row="6"
                 ItemsSource="{Binding Path=Filter.Locations, Mode=OneTime}"
                 SelectedItem="{Binding Path=Filter.Location, Mode=TwoWay}" />
 
-            <TextBlock Grid.Row="6" Text="Price (less than):" />
+            <TextBlock Grid.Row="7" Text="Price (less than):" />
             <TextBox
-                Grid.Row="7"
+                Grid.Row="8"
                 Text="{Binding Path=Filter.MaximumPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                 TextAlignment="Right" />
 
             <GroupBox
-                Grid.RowSpan="8"
+                Grid.RowSpan="9"
                 Grid.Column="1"
                 Header="Seller Filters">
                 <Grid>

@@ -16,7 +16,7 @@ namespace EbayWorker.ViewModels
         public SearchModel SearchQuery
         {
             get { return _search; }
-            internal set { Set("SearchQuery", ref _search, value); }
+            internal set { Set(nameof(SearchQuery), ref _search, value); }
         }
 
         #endregion

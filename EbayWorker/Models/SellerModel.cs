@@ -13,19 +13,19 @@ namespace EbayWorker.Models
         public string Name
         {
             get { return _name; }
-            set { Set("Name", ref _name, value); }
+            set { Set(nameof(Name), ref _name, value); }
         }
 
         public long FeedbackScore
         {
             get { return _feedbackScore; }
-            set { Set("FeedbackScore", ref _feedbackScore, value); }
+            set { Set(nameof(FeedbackScore), ref _feedbackScore, value); }
         }
 
         public decimal FeedbackPercent
         {
             get { return _feedbackPercent; }
-            set { Set("FeedbackPercent", ref _feedbackPercent, value); }
+            set { Set(nameof(FeedbackPercent), ref _feedbackPercent, value); }
         }
 
         #endregion

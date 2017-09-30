@@ -43,55 +43,61 @@ namespace EbayWorker.Models
         public SearchStatus Status
         {
             get { return _status; }
-            private set { Set("Status", ref _status, value); }
+            private set { Set(nameof(Status), ref _status, value); }
         }
 
         public int BrandNewCount
         {
             get { return _brandNew; }
-            private set { Set("BrandNewCount", ref _brandNew, value); }
+            private set { Set(nameof(BrandNewCount), ref _brandNew, value); }
         }
 
         public int LikeNewCount
         {
             get { return _likeNew; }
-            private set { Set("LikeNewCount", ref _likeNew, value); }
+            private set { Set(nameof(LikeNewCount), ref _likeNew, value); }
         }
 
         public int VeryGoodCount
         {
             get { return _veryGood; }
-            private set { Set("VeryGoodCount", ref _veryGood, value); }
+            private set { Set(nameof(VeryGoodCount), ref _veryGood, value); }
         }
 
         public int GoodCount
         {
             get { return _good; }
-            private set { Set("GoodCount", ref _good, value); }
+            private set { Set(nameof(GoodCount), ref _good, value); }
         }
 
         public int AcceptableCount
         {
             get { return _acceptable; }
-            private set { Set("AcceptableCount", ref _acceptable, value); }
+            private set { Set(nameof(AcceptableCount), ref _acceptable, value); }
         }
 
         public string Keywoard
         {
             get { return _keywoard; }
-            set { Set("Keywoard", ref _keywoard, value); }
+            set { Set(nameof(Keywoard), ref _keywoard, value); }
         }
 
         public Category Category
         {
             get { return _category; }
-            set { Set("Category", ref _category, value); }
+            set { Set(nameof(Category), ref _category, value); }
         }
 
         public IEnumerable<BookModel> Books
         {
             get { return _books; }
         }
+
+        public int BooksCount
+        {
+            get { return _books.Count; }
+        }
+
 
         #endregion
 
@@ -167,15 +173,23 @@ namespace EbayWorker.Models
                 var parallelOptions = new ParallelOptions();
                 parallelOptions.MaxDegreeOfParallelism = parallelQueries;
 
-                Parallel.ForEach(_books, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelQueries));
+                Parallel.ForEach(_books, parallelOptions, (currentBook) => ProcessBook(currentBook, parallelQueries));
             }
             else
             {
                 for(var index = _books.Count -1; index >= 0; index--)
                 {
                     var book = _books[index];
-                    ProcessBook(book, filter, 1);
+                    ProcessBook(book);
                 }
+            }
+
+            // apply filter
+            for(var index = _books.Count -1; index >= 0; index--)
+            {
+                var book = _books[index];
+                if (book.Status == SearchStatus.Complete && IncludeBook(book, filter) == false)
+                    RemoveBook(book);
             }
 
             // mark query complete only when data for all books is scraped
@@ -183,7 +197,7 @@ namespace EbayWorker.Models
                 Status = SearchStatus.Complete;
         }
 
-        void ProcessBook(BookModel currentBook, SearchFilter filter, int pallelWebRequests)
+        void ProcessBook(BookModel currentBook, int pallelWebRequests = 1)
         {
             var bookParser = new HtmlDocument();
             var client = new ExtendedWebClient(pallelWebRequests);
@@ -290,10 +304,7 @@ namespace EbayWorker.Models
                     currentBook.Seller.FeedbackPercent = decimal.Parse(parts[0]);
             }
 
-            if (!IncludeBook(currentBook, filter))
-                RemoveBook(currentBook);
-            else
-                currentBook.Status = SearchStatus.Complete;
+            currentBook.Status = SearchStatus.Complete;
         }
 
         bool IncludeBook(BookModel book, SearchFilter filter)
@@ -350,14 +361,14 @@ namespace EbayWorker.Models
         void Reset()
         {
             _books.Clear();
-            RaisePropertyChanged("Books");
+            RaisePropertyChanged(nameof(Books));
             BrandNewCount = LikeNewCount = VeryGoodCount = GoodCount = AcceptableCount = 0;
         }
 
         void AddBook(BookModel book)
         {
             _books.Add(book);
-            RaisePropertyChanged("Books");
+            RaisePropertyChanged(nameof(Books));
         }
 
         void RemoveBook(BookModel book)
@@ -390,7 +401,7 @@ namespace EbayWorker.Models
                     break;
             }
             _books.Remove(book);
-            RaisePropertyChanged("Books");
+            RaisePropertyChanged(nameof(Books));
         }
 
     }

@@ -17,7 +17,7 @@ namespace EbayWorker.ViewModels
     {
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
-        bool _failedQueriesOnly, _scrapBooksInParallel;
+        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
 
@@ -37,13 +37,13 @@ namespace EbayWorker.ViewModels
         public string ExecutionTime
         {
             get { return _executionTime; }
-            private set { Set("ExecutionTime", ref _executionTime, value); }
+            private set { Set(nameof(ExecutionTime), ref _executionTime, value); }
         }
 
         public int ExecutedQueries
         {
             get { return _executedQueries; }
-            private set { Set("ExecutedQueries", ref _executedQueries, value); }
+            private set { Set(nameof(ExecutedQueries), ref _executedQueries, value); }
         }
 
         public int MaxParallelQueries
@@ -65,37 +65,43 @@ namespace EbayWorker.ViewModels
         public string InputFilePath
         {
             get { return _inputFilePath; }
-            private set { Set("InputFilePath", ref _inputFilePath, value); }
+            private set { Set(nameof(InputFilePath), ref _inputFilePath, value); }
         }
 
         public string OutputDirectoryPath
         {
             get { return _outputDirectoryPath; }
-            private set { Set("OutputDirectoryPath", ref _outputDirectoryPath, value); }
+            private set { Set(nameof(OutputDirectoryPath), ref _outputDirectoryPath, value); }
         }
 
         public int ParallelQueries
         {
             get { return _parallelQueries; }
-            set { Set("ParallelQueries", ref _parallelQueries, value); }
+            set { Set(nameof(ParallelQueries), ref _parallelQueries, value); }
         }
 
         public List<SearchModel> SearchQueries
         {
             get { return _searchQueries; }
-            private set { Set("SearchQueries", ref _searchQueries, value); }
+            private set { Set(nameof(SearchQueries), ref _searchQueries, value); }
         }
 
         public bool FailedQueriesOnly
         {
             get { return _failedQueriesOnly; }
-            set { Set("FailedQueriesOnly", ref _failedQueriesOnly, value); }
+            set { Set(nameof(FailedQueriesOnly), ref _failedQueriesOnly, value); }
         }
 
         public bool ScrapBooksInParallel
         {
             get { return _scrapBooksInParallel; }
-            set { Set("ScrapBooksInParallel", ref _scrapBooksInParallel, value); }
+            set { Set(nameof(ScrapBooksInParallel), ref _scrapBooksInParallel, value); }
+        }
+
+        public bool ExcludeEmptyResults
+        {
+            get { return _excludeEmptyResults; }
+            set { Set(nameof(ExcludeEmptyResults), ref _excludeEmptyResults, value); }
         }
 
         #endregion
@@ -275,6 +281,17 @@ namespace EbayWorker.ViewModels
 
                 ExecutedQueries += 1;
             });
+
+            if (ExcludeEmptyResults)
+            {
+                for(var index = SearchQueries.Count -1; index >=0; index--)
+                {
+                    var query = SearchQueries[index];
+                    if (query.Status == SearchStatus.Complete && query.BooksCount == 0)
+                        SearchQueries.RemoveAt(index);
+                }
+                RaisePropertyChanged(nameof(SearchQueries));
+            }
 
             StopTimer();
         }

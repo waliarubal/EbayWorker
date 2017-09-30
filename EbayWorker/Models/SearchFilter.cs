@@ -33,25 +33,25 @@ namespace EbayWorker.Models
         public string Location
         {
             get { return _location; }
-            set { Set("Location", ref _location, value); }
+            set { Set(nameof(Location), ref _location, value); }
         }
 
         public bool CheckFeedbackScore
         {
             get { return _checkFeedbackScore; }
-            set { Set("CheckFeedbackScore", ref _checkFeedbackScore, value); }
+            set { Set(nameof(CheckFeedbackScore), ref _checkFeedbackScore, value); }
         }
 
         public long FeedbackScore
         {
             get { return _feedbackScore; }
-            set { Set("FeedbackScore", ref _feedbackScore, value); }
+            set { Set(nameof(FeedbackScore), ref _feedbackScore, value); }
         }
 
         public bool CheckFeedbackPercent
         {
             get { return _checkFeedbakcPercent; }
-            set { Set("CheckFeedbackPercent", ref _checkFeedbakcPercent, value); }
+            set { Set(nameof(CheckFeedbackPercent), ref _checkFeedbakcPercent, value); }
         }
 
         public decimal FeedbackPercent
@@ -64,38 +64,38 @@ namespace EbayWorker.Models
                 else if (value > 99.99m)
                     value = 99.99m;
 
-                Set("FeedbackPercent", ref _feedbackPercent, value);
+                Set(nameof(FeedbackPercent), ref _feedbackPercent, value);
             }
         }
 
         public decimal MaximumPrice
         {
             get { return _priceMaximum; }
-            set { Set("MaximumPrice", ref _priceMaximum, value); }
+            set { Set(nameof(MaximumPrice), ref _priceMaximum, value); }
         }
 
         public bool CheckAllowedSellers
         {
             get { return _checkAllowedSellers; }
-            set { Set("CheckAllowedSellers", ref _checkAllowedSellers, value); }
+            set { Set(nameof(CheckAllowedSellers), ref _checkAllowedSellers, value); }
         }
 
         public HashSet<string> AllowedSellers
         {
             get { return _allowedSellerNames; }
-            set { Set("AllowedSellers", ref _allowedSellerNames, value); }
+            set { Set(nameof(AllowedSellers), ref _allowedSellerNames, value); }
         }
 
         public bool CheckRestrictedSellers
         {
             get { return _checkRestrictedSellers; }
-            set { Set("CheckRestrictedSellers", ref _checkRestrictedSellers, value); }
+            set { Set(nameof(CheckRestrictedSellers), ref _checkRestrictedSellers, value); }
         }
 
         public HashSet<string> RestrictedSellers
         {
             get { return _restrictedSellerNames; }
-            set { Set("RestrictedSellers", ref _restrictedSellerNames, value); }
+            set { Set(nameof(RestrictedSellers), ref _restrictedSellerNames, value); }
         }
 
         public bool IsAuction
@@ -103,7 +103,7 @@ namespace EbayWorker.Models
             get { return _isAuction; }
             set
             {
-                Set("IsAuction", ref _isAuction, value);
+                Set(nameof(IsAuction), ref _isAuction, value);
                 if (value)
                     IsClassifiedAds = false;
             }
@@ -114,7 +114,7 @@ namespace EbayWorker.Models
             get { return _isBuyItNow; }
             set
             {
-                Set("IsBuyItNow", ref _isBuyItNow, value);
+                Set(nameof(IsBuyItNow), ref _isBuyItNow, value);
                 if (value)
                     IsClassifiedAds = false;
             }
@@ -125,7 +125,7 @@ namespace EbayWorker.Models
             get { return _isClassifiedAds; }
             set
             {
-                Set("IsClassifiedAds", ref _isClassifiedAds, value);
+                Set(nameof(IsClassifiedAds), ref _isClassifiedAds, value);
                 if (value)
                 {
                     IsBuyItNow = false;
