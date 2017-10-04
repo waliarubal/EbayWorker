@@ -112,6 +112,8 @@ namespace EbayWorker.Models
             var location = filter.GetLocation();
             if (location > 0)
                 queryStringBuilder.AppendFormat("LH_LocatedIn=1&_salic={0}&LH_SubLocation=1", location);
+            if (filter.MaximumPrice > 0)
+                queryStringBuilder.AppendFormat("&_mPrRngCbx=1&_udlo=&_udhi={0}", filter.MaximumPrice);
             if (filter.IsAuction)
                 queryStringBuilder.Append("&LH_Auction=1");
             if (filter.IsBuyItNow)
@@ -136,7 +138,7 @@ namespace EbayWorker.Models
             }
 
             // change to inner node to decrease DOM traversal
-            rootNode = rootNode.SelectSingleNode("//div[@id='CenterPanel']");
+            rootNode = rootNode.SelectSingleNode("//div[@id='Results']");
             if (rootNode == null)
             {
                 Status = SearchStatus.Failed;

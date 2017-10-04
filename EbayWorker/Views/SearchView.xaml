@@ -83,6 +83,16 @@
                     Binding="{Binding Path=Seller.Name, Mode=OneWay}"
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Seller" />
+                <DataGridTextColumn
+                    Width="100"
+                    Binding="{Binding Path=Seller.FeedbackScore, Mode=OneWay}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
+                    Header="Feedback Score" />
+                <DataGridTextColumn
+                    Width="100"
+                    Binding="{Binding Path=Seller.FeedbackPercent, Mode=OneWay, StringFormat='{}{0:##0.00}'}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
+                    Header="Feedback %" />
                 <DataGridTemplateColumn Width="Auto" Header="URL">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
