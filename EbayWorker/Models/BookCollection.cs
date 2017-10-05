@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Text;
 
 namespace EbayWorker.Models
 {
@@ -192,6 +193,65 @@ namespace EbayWorker.Models
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public string ToCsvString()
+        {
+            var builder = new StringBuilder();
+            for (var index = 0; index < Count; index++)
+            {
+                var book = this[index];
+                builder.AppendLine(string.Format("'{0}','{1}',{2}", book.Isbn, book.Condition, book.Price));
+            }
+            return builder.ToString();
+        }
+
+        public string ToCsvStringGroupedByCondition()
+        {
+            if (Count == 0)
+                return null;
+
+            var firstBook = _books[0];
+
+            var bn = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.BrandNew));
+            var ln = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.LikeNew));
+            var vg = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.VeryGood));
+            var g = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.Good));
+            var a = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.Acceptable));
+            for(var index = 0; index < Count; index++)
+            {
+                var book = this[index];
+                switch(book.Condition)
+                {
+                    case BookCondition.BrandNew:
+                        bn.AppendFormat("{0},", book.Price);
+                        break;
+
+                    case BookCondition.LikeNew:
+                        ln.AppendFormat("{0},", book.Price);
+                        break;
+
+                    case BookCondition.VeryGood:
+                        vg.AppendFormat("{0},", book.Price);
+                        break;
+
+                    case BookCondition.Good:
+                        g.AppendFormat("{0},", book.Price);
+                        break;
+
+                    case BookCondition.Acceptable:
+                        a.AppendFormat("{0},", book.Price);
+                        break;
+                }
+            }
+
+            var builder = new StringBuilder();
+            builder.AppendLine(bn.ToString(0, bn.Length - 1));
+            builder.AppendLine(ln.ToString(0, ln.Length - 1));
+            builder.AppendLine(vg.ToString(0, vg.Length - 1));
+            builder.AppendLine(g.ToString(0, g.Length - 1));
+            builder.AppendLine(a.ToString(0, a.Length - 1));
+            return builder.ToString();
         }
     }
 }

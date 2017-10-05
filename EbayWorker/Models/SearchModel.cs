@@ -24,6 +24,9 @@ namespace EbayWorker.Models
     {
         const int ResultsPerPage = 200;
 
+        public delegate void SearchCompleted(SearchModel search);
+        public event SearchCompleted OnSearchCompleted;
+
         string _keywoard;
         Category _category;
         SearchStatus _status;
@@ -41,7 +44,18 @@ namespace EbayWorker.Models
         public SearchStatus Status
         {
             get { return _status; }
-            private set { Set(nameof(Status), ref _status, value); }
+            private set
+            {
+                Set(nameof(Status), ref _status, value);
+
+                
+                if (value == SearchStatus.Complete)
+                {
+                    var handler = OnSearchCompleted;
+                    if (handler != null)
+                        handler.Invoke(this);
+                }
+            }
         }
 
         public string Keywoard

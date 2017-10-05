@@ -314,11 +314,18 @@ namespace EbayWorker.ViewModels
                 var search = new SearchModel();
                 search.Keywoard = keywoard;
                 search.Category = Category.Books;
+                search.OnSearchCompleted += Search_OnSearchCompleted;
                 searchQueries.Add(search);
             }
             SearchQueries = searchQueries;
             ExecutionTime = "00:00:00";
             ExecutedQueries = 0;
+        }
+
+        void Search_OnSearchCompleted(SearchModel search)
+        {
+            //TODO: work here
+            search.Books.ToCsvStringGroupedByCondition();
         }
 
         string SelectDirectory()
