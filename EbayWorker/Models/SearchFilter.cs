@@ -136,6 +136,12 @@ namespace EbayWorker.Models
 
         #endregion
 
+        internal void LoadDefaults()
+        {
+            _location = "United States";
+            _isBuyItNow = true;
+        }
+
         internal int GetLocation()
         {
             if (string.IsNullOrEmpty(Location))

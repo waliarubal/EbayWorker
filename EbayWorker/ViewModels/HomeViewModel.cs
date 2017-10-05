@@ -56,7 +56,10 @@ namespace EbayWorker.ViewModels
             get
             {
                 if (_filter == null)
+                {
                     _filter = new SearchFilter();
+                    _filter.LoadDefaults();
+                }
 
                 return _filter;
             }
@@ -287,7 +290,7 @@ namespace EbayWorker.ViewModels
                 for(var index = SearchQueries.Count -1; index >=0; index--)
                 {
                     var query = SearchQueries[index];
-                    if (query.Status == SearchStatus.Complete && query.BooksCount == 0)
+                    if (query.Status == SearchStatus.Complete && query.Books.Count == 0)
                         SearchQueries.RemoveAt(index);
                 }
                 RaisePropertyChanged(nameof(SearchQueries));

@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:EbayWorker.ViewModels"
     Title="Search Query"
-    Width="800"
+    Width="1024"
     Height="600"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
@@ -53,7 +53,7 @@
             Grid.Row="3"
             Grid.ColumnSpan="2"
             IsReadOnly="True"
-            ItemsSource="{Binding Path=SearchQuery.Books, Mode=OneWay}">
+            ItemsSource="{Binding Path=SearchQuery.Books.Items, Mode=OneWay}">
             <DataGrid.Columns>
                 <DataGridTextColumn
                     Width="100"
@@ -77,19 +77,25 @@
                 <DataGridTextColumn
                     Width="80"
                     Binding="{Binding Path=Condition, Mode=OneWay, Converter={StaticResource ResourceKey=EnumToStringConverter}}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Condition" />
+                <DataGridTextColumn
+                    Width="80"
+                    Binding="{Binding Path=Location, Mode=OneWay, Converter={StaticResource ResourceKey=EnumToStringConverter}}"
+                    CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
+                    Header="Location" />
                 <DataGridTextColumn
                     Width="140"
                     Binding="{Binding Path=Seller.Name, Mode=OneWay}"
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Seller" />
                 <DataGridTextColumn
-                    Width="100"
+                    Width="94"
                     Binding="{Binding Path=Seller.FeedbackScore, Mode=OneWay}"
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Feedback Score" />
                 <DataGridTextColumn
-                    Width="100"
+                    Width="94"
                     Binding="{Binding Path=Seller.FeedbackPercent, Mode=OneWay, StringFormat='{}{0:##0.00}'}"
                     CellStyle="{StaticResource ResourceKey=ToolTipCellStyle}"
                     Header="Feedback %" />

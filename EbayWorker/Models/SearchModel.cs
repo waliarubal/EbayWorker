@@ -2,7 +2,6 @@
 using EbayWorker.Helpers.Base;
 using HtmlAgilityPack;
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,13 +27,12 @@ namespace EbayWorker.Models
         string _keywoard;
         Category _category;
         SearchStatus _status;
-        List<BookModel> _books;
-        int _brandNew, _likeNew, _veryGood, _good, _acceptable;
         readonly Type _conditionType;
+        BookCollection _books;
 
         public SearchModel()
         {
-            _books = new List<BookModel>();
+            _books = new BookCollection();
             _conditionType = typeof(BookCondition);
         }
 
@@ -44,36 +42,6 @@ namespace EbayWorker.Models
         {
             get { return _status; }
             private set { Set(nameof(Status), ref _status, value); }
-        }
-
-        public int BrandNewCount
-        {
-            get { return _brandNew; }
-            private set { Set(nameof(BrandNewCount), ref _brandNew, value); }
-        }
-
-        public int LikeNewCount
-        {
-            get { return _likeNew; }
-            private set { Set(nameof(LikeNewCount), ref _likeNew, value); }
-        }
-
-        public int VeryGoodCount
-        {
-            get { return _veryGood; }
-            private set { Set(nameof(VeryGoodCount), ref _veryGood, value); }
-        }
-
-        public int GoodCount
-        {
-            get { return _good; }
-            private set { Set(nameof(GoodCount), ref _good, value); }
-        }
-
-        public int AcceptableCount
-        {
-            get { return _acceptable; }
-            private set { Set(nameof(AcceptableCount), ref _acceptable, value); }
         }
 
         public string Keywoard
@@ -88,14 +56,9 @@ namespace EbayWorker.Models
             set { Set(nameof(Category), ref _category, value); }
         }
 
-        public IEnumerable<BookModel> Books
+        public BookCollection Books
         {
             get { return _books; }
-        }
-
-        public int BooksCount
-        {
-            get { return _books.Count; }
         }
 
 
@@ -128,7 +91,7 @@ namespace EbayWorker.Models
             url.Query = queryStringBuilder.ToString();
 
             Status = SearchStatus.Working;
-            Reset();
+            _books.Clear();
 
             var rootNode = Load(ref client, ref parser, url.Uri);
             if (rootNode == null)
@@ -138,14 +101,14 @@ namespace EbayWorker.Models
             }
 
             // change to inner node to decrease DOM traversal
-            rootNode = rootNode.SelectSingleNode("//div[@id='Results']");
+            rootNode = rootNode.SelectSingleNode(".//ul[@id='ListViewInner']");
             if (rootNode == null)
             {
                 Status = SearchStatus.Failed;
                 return;
             }
 
-            var nodes = rootNode.SelectNodes("//a[@class='vip']");
+            var nodes = rootNode.SelectNodes(".//li[starts-with(@id,'item')]");
             if (nodes == null || nodes.Count == 0)
             {
                 // no listing found
@@ -153,20 +116,42 @@ namespace EbayWorker.Models
                 return;
             }
 
-            foreach (var node in nodes)
+            HtmlNode innerNode;
+            foreach (HtmlNode node in nodes)
             {
+                innerNode = node.SelectSingleNode(".//a[@class='vip']");
+                if (innerNode == null)
+                    continue;
+
                 var book = new BookModel();
-                book.Title = node.InnerText;
-                book.Url = new Uri(node.Attributes["href"].Value);
+                book.Title = innerNode.InnerText;
+                book.Url = new Uri(innerNode.Attributes["href"].Value);
 
                 // last part of URL stores eBay item code
                 var urlParts = book.Url.AbsolutePath.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                 if (urlParts.Length > 0)
                     book.Code = urlParts[urlParts.Length - 1];
 
+                // extract location
+                innerNode = node.SelectSingleNode(".//ul[starts-with(@class,'lvdetails')]/li");
+                if (innerNode != null)
+                {
+                    var bookLocation = innerNode.InnerText;
+                    if (string.IsNullOrEmpty(bookLocation))
+                        continue;
+                    else
+                        bookLocation = bookLocation.Trim().Remove(0, "From ".Length);
+
+                    // ignore books which don't match location filter
+                    if (!string.IsNullOrEmpty(filter.Location) && !bookLocation.Equals(filter.Location))
+                        continue;
+
+                    book.Location = bookLocation.Trim().Replace("From ", string.Empty);
+                }
+
                 // eBay shows advertisements, ignore them
                 if (book.Url.Host.Equals(url.Host, StringComparison.InvariantCultureIgnoreCase))
-                    AddBook(book);
+                    _books.Add(book);
             }
 
             // process each book in parallel
@@ -175,14 +160,14 @@ namespace EbayWorker.Models
                 var parallelOptions = new ParallelOptions();
                 parallelOptions.MaxDegreeOfParallelism = parallelQueries;
 
-                Parallel.ForEach(_books, parallelOptions, (currentBook) => ProcessBook(currentBook, parallelQueries));
+                Parallel.ForEach(_books.Items, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelQueries));
             }
             else
             {
                 for(var index = _books.Count -1; index >= 0; index--)
                 {
                     var book = _books[index];
-                    ProcessBook(book);
+                    ProcessBook(book, filter);
                 }
             }
 
@@ -191,7 +176,7 @@ namespace EbayWorker.Models
             {
                 var book = _books[index];
                 if (book.Status == SearchStatus.Complete && IncludeBook(book, filter) == false)
-                    RemoveBook(book);
+                    _books.Remove(book);
             }
 
             // mark query complete only when data for all books is scraped
@@ -199,7 +184,7 @@ namespace EbayWorker.Models
                 Status = SearchStatus.Complete;
         }
 
-        void ProcessBook(BookModel currentBook, int pallelWebRequests = 1)
+        void ProcessBook(BookModel currentBook, SearchFilter filter, int pallelWebRequests = 1)
         {
             var bookParser = new HtmlDocument();
             var client = new ExtendedWebClient(pallelWebRequests);
@@ -212,75 +197,55 @@ namespace EbayWorker.Models
                 return;
             }
 
-            var htmlNode = rootNode.SelectSingleNode("//div[@id='BottomPanel']//h2[@itemprop='productID']");
+            var htmlNode = rootNode.SelectSingleNode(".//div[@id='BottomPanel']//h2[@itemprop='productID']");
             if (htmlNode != null)
                 currentBook.Isbn = htmlNode.InnerText;
 
             // change to inner node to decrease DOM traversal
-            rootNode = rootNode.SelectSingleNode("//div[@id='CenterPanelInternal']");
+            rootNode = rootNode.SelectSingleNode(".//div[@id='CenterPanelInternal']");
             if (rootNode == null)
             {
                 currentBook.Status = Status = SearchStatus.Failed;
                 return;
             }
 
-            var innerRoot = rootNode.SelectSingleNode("//div[@id='LeftSummaryPanel']");
+            var innerRoot = rootNode.SelectSingleNode(".//div[@id='LeftSummaryPanel']");
             if (innerRoot == null)
             {
                 currentBook.Status = Status = SearchStatus.Failed;
                 return;
             }
 
-            htmlNode = innerRoot.SelectSingleNode("//div[@itemprop='itemCondition']");
+            htmlNode = innerRoot.SelectSingleNode(".//div[@itemprop='itemCondition']");
             if (htmlNode != null)
             {
                 BookCondition condition;
                 if (Enum.TryParse(htmlNode.InnerText.Replace(" ", string.Empty), out condition))
                     currentBook.Condition = condition;
-
-                switch (currentBook.Condition)
-                {
-                    case BookCondition.BrandNew:
-                        BrandNewCount++;
-                        break;
-
-                    case BookCondition.LikeNew:
-                        LikeNewCount++;
-                        break;
-
-                    case BookCondition.VeryGood:
-                        VeryGoodCount++;
-                        break;
-
-                    case BookCondition.Good:
-                        GoodCount++;
-                        break;
-
-                    case BookCondition.Acceptable:
-                        AcceptableCount++;
-                        break;
-                }
             }
 
-            htmlNode = innerRoot.SelectSingleNode("//span[@itemprop='price']");
-            if (htmlNode != null)
+            var nodes = innerRoot.SelectNodes(".//span[@itemprop='price']");
+            if (nodes != null)
             {
+                // in case of books with both buy-now and bid-now option, pick buy now price
+                htmlNode = nodes[filter.IsBuyItNow && nodes.Count > 1 ? 1 : 0];
+
                 currentBook.Price = decimal.Parse(htmlNode.Attributes["content"].Value);
 
                 // try to extract price if current price is not in USD
-                htmlNode = htmlNode.ParentNode.SelectSingleNode("//span[@id='convbinPrice']");
+                htmlNode = htmlNode.ParentNode.SelectSingleNode(".//span[@id='convbinPrice']");
                 if (htmlNode != null && htmlNode.HasChildNodes)
                     currentBook.Price = ExtractDecimal(htmlNode.FirstChild.InnerText);
             }
             else
             {
                 // retrieve discounted price
-                htmlNode = rootNode.SelectSingleNode("//span[@id='mm-saleDscPrc']");
+                htmlNode = rootNode.SelectSingleNode(".//span[@id='mm-saleDscPrc']");
                 if (htmlNode != null)
                     currentBook.Price = ExtractDecimal(htmlNode.InnerText);
             }
 
-            innerRoot = rootNode.SelectSingleNode("//div[@id='RightSummaryPanel']");
+            innerRoot = rootNode.SelectSingleNode(".//div[@id='RightSummaryPanel']");
             if (innerRoot == null)
             {
                 currentBook.Status = Status = SearchStatus.Failed;
@@ -290,15 +255,15 @@ namespace EbayWorker.Models
             // seller details
             currentBook.Seller = new SellerModel();
 
-            htmlNode = innerRoot.SelectSingleNode("//span[@class='mbg-nw']");
+            htmlNode = innerRoot.SelectSingleNode(".//span[@class='mbg-nw']");
             if (htmlNode != null)
                 currentBook.Seller.Name = htmlNode.InnerText;
 
-            htmlNode = innerRoot.SelectSingleNode("//a[starts-with(@title,'feedback score:')]");
+            htmlNode = innerRoot.SelectSingleNode(".//a[starts-with(@title,'feedback score:')]");
             if (htmlNode != null)
                 currentBook.Seller.FeedbackScore = long.Parse(htmlNode.InnerText);
 
-            htmlNode = innerRoot.SelectSingleNode("//div[@id='si-fb']");
+            htmlNode = innerRoot.SelectSingleNode(".//div[@id='si-fb']");
             if (htmlNode != null)
             {
                 var parts = htmlNode.InnerText.Split('%');
@@ -358,52 +323,6 @@ namespace EbayWorker.Models
                 Status = SearchStatus.Failed;
                 return null;
             }
-        }
-
-        void Reset()
-        {
-            _books.Clear();
-            RaisePropertyChanged(nameof(Books));
-            BrandNewCount = LikeNewCount = VeryGoodCount = GoodCount = AcceptableCount = 0;
-        }
-
-        void AddBook(BookModel book)
-        {
-            _books.Add(book);
-            RaisePropertyChanged(nameof(Books));
-        }
-
-        void RemoveBook(BookModel book)
-        {
-            switch (book.Condition)
-            {
-                case BookCondition.BrandNew:
-                    if (BrandNewCount > 0)
-                        BrandNewCount--;
-                    break;
-
-                case BookCondition.LikeNew:
-                    if (LikeNewCount > 0)
-                        LikeNewCount--;
-                    break;
-
-                case BookCondition.VeryGood:
-                    if (VeryGoodCount > 0)
-                        VeryGoodCount--;
-                    break;
-
-                case BookCondition.Good:
-                    if (GoodCount > 0)
-                        GoodCount--;
-                    break;
-
-                case BookCondition.Acceptable:
-                    if (AcceptableCount > 0)
-                        AcceptableCount--;
-                    break;
-            }
-            _books.Remove(book);
-            RaisePropertyChanged(nameof(Books));
         }
 
     }

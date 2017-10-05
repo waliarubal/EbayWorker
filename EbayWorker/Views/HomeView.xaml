@@ -299,23 +299,23 @@
                     Header="Books" />
                 <DataGridTextColumn
                     Width="100"
-                    Binding="{Binding Path=BrandNewCount, Mode=OneWay}"
+                    Binding="{Binding Path=Books.BrandNewCount, Mode=OneWay}"
                     Header="Brand New" />
                 <DataGridTextColumn
                     Width="100"
-                    Binding="{Binding Path=LikeNewCount, Mode=OneWay}"
+                    Binding="{Binding Path=Books.LikeNewCount, Mode=OneWay}"
                     Header="Like New" />
                 <DataGridTextColumn
                     Width="100"
-                    Binding="{Binding Path=VeryGoodCount, Mode=OneWay}"
+                    Binding="{Binding Path=Books.VeryGoodCount, Mode=OneWay}"
                     Header="Very Good" />
                 <DataGridTextColumn
                     Width="100"
-                    Binding="{Binding Path=GoodCount, Mode=OneWay}"
+                    Binding="{Binding Path=Books.GoodCount, Mode=OneWay}"
                     Header="Good" />
                 <DataGridTextColumn
                     Width="100"
-                    Binding="{Binding Path=AcceptableCount, Mode=OneWay}"
+                    Binding="{Binding Path=Books.AcceptableCount, Mode=OneWay}"
                     Header="Acceptable" />
                 <DataGridTemplateColumn>
                     <DataGridTemplateColumn.CellTemplate>
