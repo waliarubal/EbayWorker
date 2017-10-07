@@ -195,52 +195,104 @@ namespace EbayWorker.Models
             return GetEnumerator();
         }
 
-        public string ToCsvString()
+        public string ToCsvString(decimal addToPrice)
         {
             var builder = new StringBuilder();
             for (var index = 0; index < Count; index++)
             {
                 var book = this[index];
-                builder.AppendLine(string.Format("'{0}','{1}',{2}", book.Isbn, book.Condition, book.Price));
+                builder.AppendLine(string.Format("{0},{1},{2:#####0.00}", book.Isbn, book.Condition, book.Price + addToPrice));
             }
             return builder.ToString();
         }
 
-        public string ToCsvStringGroupedByCondition()
+        public string ToCsvStringGroupedByCondition(decimal addToPrice)
         {
             if (Count == 0)
                 return null;
 
             var firstBook = _books[0];
 
-            var bn = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.BrandNew));
-            var ln = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.LikeNew));
-            var vg = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.VeryGood));
-            var g = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.Good));
-            var a = new StringBuilder(string.Format("'{0}','{1}',", firstBook.Isbn, BookCondition.Acceptable));
+            var bn = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.BrandNew));
+            var ln = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.LikeNew));
+            var vg = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.VeryGood));
+            var g = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.Good));
+            var a = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.Acceptable));
             for(var index = 0; index < Count; index++)
             {
                 var book = this[index];
                 switch(book.Condition)
                 {
                     case BookCondition.BrandNew:
-                        bn.AppendFormat("{0},", book.Price);
+                        bn.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
                         break;
 
                     case BookCondition.LikeNew:
-                        ln.AppendFormat("{0},", book.Price);
+                        ln.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
                         break;
 
                     case BookCondition.VeryGood:
-                        vg.AppendFormat("{0},", book.Price);
+                        vg.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
                         break;
 
                     case BookCondition.Good:
-                        g.AppendFormat("{0},", book.Price);
+                        g.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
                         break;
 
                     case BookCondition.Acceptable:
-                        a.AppendFormat("{0},", book.Price);
+                        a.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        break;
+                }
+            }
+
+            var builder = new StringBuilder();
+            builder.AppendLine(bn.ToString(0, bn.Length - 1));
+            builder.AppendLine(ln.ToString(0, ln.Length - 1));
+            builder.AppendLine(vg.ToString(0, vg.Length - 1));
+            builder.AppendLine(g.ToString(0, g.Length - 1));
+            builder.AppendLine(a.ToString(0, a.Length - 1));
+            return builder.ToString();
+        }
+
+        public string ToCsvStringGroupedByConditionStupidLogic(decimal addToPrice)
+        {
+            if (Count == 0)
+                return null;
+
+            var firstBook = _books[0];
+
+            var bn = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.BrandNew));
+            var ln = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.LikeNew));
+            var vg = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.VeryGood));
+            var g = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.Good));
+            var a = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.Acceptable));
+            for (var index = 0; index < Count; index++)
+            {
+                var book = this[index];
+                switch (book.Condition)
+                {
+                    case BookCondition.BrandNew:
+                        bn.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        ln.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        break;
+
+                    case BookCondition.LikeNew:
+                        ln.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        vg.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        break;
+
+                    case BookCondition.VeryGood:
+                        vg.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        g.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        break;
+
+                    case BookCondition.Good:
+                        g.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        a.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        break;
+
+                    case BookCondition.Acceptable:
+                        a.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
                         break;
                 }
             }

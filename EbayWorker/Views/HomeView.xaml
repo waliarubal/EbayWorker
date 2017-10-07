@@ -69,12 +69,11 @@
 
         <Grid Grid.Row="2" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width=".3*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -122,16 +121,36 @@
                 ItemsSource="{Binding Path=Filter.Locations, Mode=OneTime}"
                 SelectedItem="{Binding Path=Filter.Location, Mode=TwoWay}" />
 
-            <TextBlock Grid.Row="7" Text="Price (less than):" />
-            <TextBox
-                Grid.Row="8"
-                Text="{Binding Path=Filter.MaximumPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                TextAlignment="Right" />
+            <GroupBox Grid.RowSpan="4" Grid.Column="1">
+                <GroupBox.Header>
+                    <CheckBox Content="Price" IsChecked="{Binding Path=Filter.IsPriceFiltered, Mode=TwoWay}" />
+                </GroupBox.Header>
+                <StackPanel IsEnabled="{Binding Path=Filter.IsPriceFiltered, Mode=OneWay}">
+                    <TextBlock Text="More Than:" />
+                    <TextBox Text="{Binding Path=Filter.MinimumPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='#####0.00'}" TextAlignment="Right" />
+                    <TextBlock Text="Less Than:" />
+                    <TextBox Text="{Binding Path=Filter.MaximumPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='#####0.00'}" TextAlignment="Right" />
+                </StackPanel>
+            </GroupBox>
 
             <GroupBox
-                Grid.RowSpan="9"
+                Grid.Row="4"
+                Grid.RowSpan="3"
                 Grid.Column="1"
-                Header="Seller Filters">
+                Header="Output File (CSV)">
+                <StackPanel>
+                    <RadioButton Content="No Grouping" IsChecked="True" />
+                    <RadioButton Content="Books grouped by Condition" IsChecked="{Binding Path=GroupByCondition, Mode=TwoWay}" />
+                    <RadioButton Content="Books grouped by Condition (stupid logic)" IsChecked="{Binding Path=GroupByStupidLogic, Mode=TwoWay}" />
+                    <TextBlock Text="Add to Price:" />
+                    <TextBox Text="{Binding Path=Filter.MinimumPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='#####0.00'}" TextAlignment="Right" />
+                </StackPanel>
+            </GroupBox>
+
+            <GroupBox
+                Grid.RowSpan="7"
+                Grid.Column="2"
+                Header="Seller">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />

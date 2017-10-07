@@ -1,4 +1,7 @@
-﻿using System.Text.RegularExpressions;
+﻿using System;
+using System.Globalization;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace EbayWorker.Helpers
 {
@@ -15,6 +18,28 @@ namespace EbayWorker.Helpers
                 @"(\p{Ll})(\P{Ll})",
                 "$1 $2"
             );
+        }
+
+        public static DateTime GetInternetTime(this DateTime instance, Uri url = null)
+        {
+            if (url == null)
+                url = new Uri("Https://www.google.com/");
+
+            try
+            {
+                var myHttpWebRequest = WebRequest.Create(url);
+                var response = myHttpWebRequest.GetResponse();
+                var date = response.Headers["date"];
+                return DateTime.ParseExact(date,
+                                           "ddd, dd MMM yyyy HH:mm:ss 'GMT'",
+                                           CultureInfo.InvariantCulture.DateTimeFormat,
+                                           DateTimeStyles.AssumeUniversal);
+            }
+            catch
+            {
+                return DateTime.Now;
+            }
+
         }
     }
 }

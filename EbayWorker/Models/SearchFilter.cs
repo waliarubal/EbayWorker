@@ -6,8 +6,8 @@ namespace EbayWorker.Models
     public class SearchFilter: NotificationBase
     {
         long _feedbackScore;
-        decimal _feedbackPercent, _priceMaximum;
-        bool _checkFeedbackScore, _checkFeedbakcPercent, _checkAllowedSellers, _checkRestrictedSellers, _isAuction, _isBuyItNow, _isClassifiedAds;
+        decimal _feedbackPercent, _priceMaximum, _priceMinimum;
+        bool _checkFeedbackScore, _checkFeedbakcPercent, _checkAllowedSellers, _checkRestrictedSellers, _isAuction, _isBuyItNow, _isClassifiedAds, _isPriceFiltered;
         HashSet<string> _allowedSellerNames, _restrictedSellerNames;
         string _location;
         readonly Dictionary<string, int> _locations;
@@ -66,6 +66,18 @@ namespace EbayWorker.Models
 
                 Set(nameof(FeedbackPercent), ref _feedbackPercent, value);
             }
+        }
+
+        public bool IsPriceFiltered
+        {
+            get { return _isPriceFiltered; }
+            set { Set(nameof(IsPriceFiltered), ref _isPriceFiltered, value); }
+        }
+
+        public decimal MinimumPrice
+        {
+            get { return _priceMinimum; }
+            set { Set(nameof(MinimumPrice), ref _priceMinimum, value); }
         }
 
         public decimal MaximumPrice

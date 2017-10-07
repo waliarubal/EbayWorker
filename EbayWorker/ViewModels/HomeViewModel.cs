@@ -4,6 +4,7 @@ using EbayWorker.Models;
 using EbayWorker.Views;
 using HtmlAgilityPack;
 using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,14 +18,21 @@ namespace EbayWorker.ViewModels
     {
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
-        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults;
+        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
+        decimal _addToPrice;
+        static object _syncLock;
 
         Timer _timer;
         Stopwatch _stopWatch;
         
         CommandBase _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
+
+        static HomeViewModel()
+        {
+            _syncLock = new object();
+        }
 
         public HomeViewModel()
         {
@@ -38,6 +46,12 @@ namespace EbayWorker.ViewModels
         {
             get { return _executionTime; }
             private set { Set(nameof(ExecutionTime), ref _executionTime, value); }
+        }
+
+        public decimal AddToPrice
+        {
+            get { return _addToPrice; }
+            private set { Set(nameof(AddToPrice), ref _addToPrice, value); }
         }
 
         public int ExecutedQueries
@@ -105,6 +119,18 @@ namespace EbayWorker.ViewModels
         {
             get { return _excludeEmptyResults; }
             set { Set(nameof(ExcludeEmptyResults), ref _excludeEmptyResults, value); }
+        }
+
+        public bool GroupByCondition
+        {
+            get { return _groupByCondition; }
+            set { Set(nameof(GroupByCondition), ref _groupByCondition, value); }
+        }
+
+        public bool GroupByStupidLogic
+        {
+            get { return _groupByStupidLogic; }
+            set { Set(nameof(GroupByStupidLogic), ref _groupByStupidLogic, value); }
         }
 
         #endregion
@@ -264,6 +290,12 @@ namespace EbayWorker.ViewModels
 
             StartTimer();
 
+            string fileName;
+            if (string.IsNullOrEmpty(OutputDirectoryPath))
+                fileName = null;
+            else
+                fileName = Path.Combine(OutputDirectoryPath, string.Format("{0}.csv", DateTime.Now.ToFileTimeUtc()));
+
             var parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
 
@@ -282,6 +314,8 @@ namespace EbayWorker.ViewModels
                 else
                     query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel);
 
+                WriteOutput(fileName, query);
+
                 ExecutedQueries += 1;
             });
 
@@ -299,6 +333,25 @@ namespace EbayWorker.ViewModels
             StopTimer();
         }
 
+        void WriteOutput(string fileName,SearchModel query)
+        {
+            if (fileName == null || query.Status != SearchStatus.Complete)
+                return;
+
+            string contents;
+            if (GroupByCondition)
+                contents = query.Books.ToCsvStringGroupedByCondition(AddToPrice);
+            else if (GroupByStupidLogic)
+                contents = query.Books.ToCsvStringGroupedByConditionStupidLogic(AddToPrice);
+            else
+                contents = query.Books.ToCsvString(AddToPrice);
+
+            lock(_syncLock)
+            {
+                File.AppendAllText(fileName, contents);
+            }
+        }
+
         void SelectInputFile()
         {
             var fileName = SelectFile();
@@ -314,18 +367,11 @@ namespace EbayWorker.ViewModels
                 var search = new SearchModel();
                 search.Keywoard = keywoard;
                 search.Category = Category.Books;
-                search.OnSearchCompleted += Search_OnSearchCompleted;
                 searchQueries.Add(search);
             }
             SearchQueries = searchQueries;
             ExecutionTime = "00:00:00";
             ExecutedQueries = 0;
-        }
-
-        void Search_OnSearchCompleted(SearchModel search)
-        {
-            //TODO: work here
-            search.Books.ToCsvStringGroupedByCondition();
         }
 
         string SelectDirectory()
