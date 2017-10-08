@@ -111,7 +111,8 @@ namespace EbayWorker.Models
             rootNode = rootNode.SelectSingleNode(".//ul[@id='ListViewInner']");
             if (rootNode == null)
             {
-                Status = SearchStatus.Failed;
+                // no listing found
+                Status = SearchStatus.Complete;
                 return;
             }
 

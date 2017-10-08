@@ -143,7 +143,7 @@
                     <RadioButton Content="Books grouped by Condition" IsChecked="{Binding Path=GroupByCondition, Mode=TwoWay}" />
                     <RadioButton Content="Books grouped by Condition (stupid logic)" IsChecked="{Binding Path=GroupByStupidLogic, Mode=TwoWay}" />
                     <TextBlock Text="Add to Price:" />
-                    <TextBox Text="{Binding Path=Filter.MinimumPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='#####0.00'}" TextAlignment="Right" />
+                    <TextBox Text="{Binding Path=AddToPrice, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, StringFormat='#####0.00'}" TextAlignment="Right" />
                 </StackPanel>
             </GroupBox>
 
@@ -257,6 +257,7 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <TextBlock VerticalAlignment="Center">
@@ -278,7 +279,7 @@
                 <TextBlock
                     Margin="4,0,0,0"
                     FontWeight="Bold"
-                    Text="Scraping books data from ebay..." />
+                    Text="Scraping books data from eBay..." />
             </StackPanel>
             <CheckBox
                 Grid.Column="2"
@@ -289,6 +290,18 @@
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Assets/Work16.png" />
                     <TextBlock Text="Scrap Books Data" />
+                </StackPanel>
+            </Button>
+            <Button
+                Grid.Column="4"
+                Height="24"
+                Margin="2,2,2,0"
+                VerticalAlignment="Top"
+                Command="{Binding Path=CancelSearchCommand, Mode=OneTime}"
+                IsEnabled="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Assets/Cancel16.png" />
+                    <TextBlock Text="Cancel" />
                 </StackPanel>
             </Button>
         </Grid>

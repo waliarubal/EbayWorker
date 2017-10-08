@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 using Forms = System.Windows.Forms;
@@ -18,7 +19,7 @@ namespace EbayWorker.ViewModels
     {
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
-        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic;
+        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _cancelFlag;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
         decimal _addToPrice;
@@ -27,7 +28,7 @@ namespace EbayWorker.ViewModels
         Timer _timer;
         Stopwatch _stopWatch;
         
-        CommandBase _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
+        CommandBase _cancelSearch, _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
 
         static HomeViewModel()
         {
@@ -231,6 +232,17 @@ namespace EbayWorker.ViewModels
             }
         }
 
+        public CommandBase CancelSearchCommand
+        {
+            get
+            {
+                if (_cancelSearch == null)
+                    _cancelSearch = new RelayCommand(() => _cancelFlag = true);
+
+                return _cancelSearch;
+            }
+        }
+
         #endregion
 
         HashSet<string> SelectSellers(object parameter)
@@ -290,17 +302,28 @@ namespace EbayWorker.ViewModels
 
             StartTimer();
 
-            string fileName;
+            // output file names
+            string fileName, notCompletedFileName;
             if (string.IsNullOrEmpty(OutputDirectoryPath))
+            {
                 fileName = null;
+                notCompletedFileName = null;
+            }
             else
-                fileName = Path.Combine(OutputDirectoryPath, string.Format("{0}.csv", DateTime.Now.ToFileTimeUtc()));
+            {
+                var fileTime = DateTime.Now.ToFileTimeUtc();
+                fileName = Path.Combine(OutputDirectoryPath, string.Format("{0}.csv", fileTime));
+                notCompletedFileName = Path.Combine(OutputDirectoryPath, string.Format("{0}_not_completed.txt", fileTime));
+            }
 
             var parallelOptions = new ParallelOptions();
             parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
 
             Parallel.ForEach(SearchQueries, parallelOptions, query =>
             {
+                if (_cancelFlag)
+                    return;
+
                 var status = query.Status;
                 if (status == SearchStatus.Working)
                     return;
@@ -319,6 +342,15 @@ namespace EbayWorker.ViewModels
                 ExecutedQueries += 1;
             });
 
+            // create file with search keywoards which failed to complete
+            var notCompletedKeywoards = new StringBuilder();
+            foreach(var query in SearchQueries)
+            {
+                if (query.Status != SearchStatus.Complete)
+                    notCompletedKeywoards.AppendLine(query.Keywoard);
+            }
+            File.WriteAllText(notCompletedFileName, notCompletedKeywoards.ToString());
+
             if (ExcludeEmptyResults)
             {
                 for(var index = SearchQueries.Count -1; index >=0; index--)
@@ -330,6 +362,7 @@ namespace EbayWorker.ViewModels
                 RaisePropertyChanged(nameof(SearchQueries));
             }
 
+            _cancelFlag = false;
             StopTimer();
         }
 

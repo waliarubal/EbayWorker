@@ -261,11 +261,10 @@ namespace EbayWorker.Models
 
             var firstBook = _books[0];
 
-            var bn = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.BrandNew));
-            var ln = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.LikeNew));
-            var vg = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.VeryGood));
-            var g = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.Good));
-            var a = new StringBuilder(string.Format("{0},{1},", firstBook.Isbn, BookCondition.Acceptable));
+            var bn = new StringBuilder(string.Format("{0}BNC,,,", firstBook.Isbn));
+            var ln = new StringBuilder(string.Format("{0}LNC,,,", firstBook.Isbn));
+            var vg = new StringBuilder(string.Format("{0}VGC,,,", firstBook.Isbn));
+            var g = new StringBuilder(string.Format("{0}GOC,,,", firstBook.Isbn));
             for (var index = 0; index < Count; index++)
             {
                 var book = this[index];
@@ -288,11 +287,6 @@ namespace EbayWorker.Models
 
                     case BookCondition.Good:
                         g.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
-                        a.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
-                        break;
-
-                    case BookCondition.Acceptable:
-                        a.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
                         break;
                 }
             }
@@ -302,7 +296,6 @@ namespace EbayWorker.Models
             builder.AppendLine(ln.ToString(0, ln.Length - 1));
             builder.AppendLine(vg.ToString(0, vg.Length - 1));
             builder.AppendLine(g.ToString(0, g.Length - 1));
-            builder.AppendLine(a.ToString(0, a.Length - 1));
             return builder.ToString();
         }
     }
