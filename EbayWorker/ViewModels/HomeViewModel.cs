@@ -52,7 +52,7 @@ namespace EbayWorker.ViewModels
         public decimal AddToPrice
         {
             get { return _addToPrice; }
-            private set { Set(nameof(AddToPrice), ref _addToPrice, value); }
+            set { Set(nameof(AddToPrice), ref _addToPrice, value); }
         }
 
         public int ExecutedQueries
