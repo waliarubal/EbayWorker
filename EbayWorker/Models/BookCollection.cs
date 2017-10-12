@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Text;
 
 namespace EbayWorker.Models
@@ -254,42 +255,67 @@ namespace EbayWorker.Models
             return builder.ToString();
         }
 
-        public string ToCsvStringGroupedByConditionStupidLogic(decimal addToPrice)
+        public string ToCsvStringGroupedByConditionStupidLogic(decimal addToPrice, string searchKeywoard)
         {
+            var bn = new StringBuilder(string.Format("{0}BNC,,,", searchKeywoard));
+            var ln = new StringBuilder(string.Format("{0}LNC,,,", searchKeywoard));
+            var vg = new StringBuilder(string.Format("{0}VGC,,,", searchKeywoard));
+            var g = new StringBuilder(string.Format("{0}GOC,,,", searchKeywoard));
+
+            // return empty rows even if no book is found
             if (Count == 0)
-                return null;
+            {
+                var emptyCsvBuilder = new StringBuilder();
+                emptyCsvBuilder.AppendLine(bn.ToString());
+                emptyCsvBuilder.AppendLine(ln.ToString());
+                emptyCsvBuilder.AppendLine(vg.ToString());
+                emptyCsvBuilder.AppendLine(g.ToString());
+                return emptyCsvBuilder.ToString();
+            }
 
             var firstBook = _books[0];
 
-            var bn = new StringBuilder(string.Format("{0}BNC,,,", firstBook.Isbn));
-            var ln = new StringBuilder(string.Format("{0}LNC,,,", firstBook.Isbn));
-            var vg = new StringBuilder(string.Format("{0}VGC,,,", firstBook.Isbn));
-            var g = new StringBuilder(string.Format("{0}GOC,,,", firstBook.Isbn));
+            var x = new List<decimal>();
+
+            var bnp = new List<decimal>();
+            var lnp = new List<decimal>();
+            var vgp = new List<decimal>();
+            var gp = new List<decimal>();
+
             for (var index = 0; index < Count; index++)
             {
                 var book = this[index];
                 switch (book.Condition)
                 {
                     case BookCondition.BrandNew:
-                        bn.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
-                        ln.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        bnp.Add(book.Price + addToPrice);
+                        lnp.Add(book.Price + addToPrice);
                         break;
 
                     case BookCondition.LikeNew:
-                        ln.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
-                        vg.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        lnp.Add(book.Price + addToPrice);
+                        vgp.Add(book.Price + addToPrice);
                         break;
 
                     case BookCondition.VeryGood:
-                        vg.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
-                        g.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        vgp.Add(book.Price + addToPrice);
+                        gp.Add(book.Price + addToPrice);
                         break;
 
                     case BookCondition.Good:
-                        g.AppendFormat("{0:#####0.00},", book.Price + addToPrice);
+                        gp.Add(book.Price + addToPrice);
                         break;
                 }
             }
+
+            foreach(var price in bnp.OrderBy(o => o))
+                bn.AppendFormat("{0:#####0.00},", price);
+            foreach (var price in lnp.OrderBy(o => o))
+                ln.AppendFormat("{0:#####0.00},", price);
+            foreach (var price in vgp.OrderBy(o => o))
+                vg.AppendFormat("{0:#####0.00},", price);
+            foreach (var price in gp.OrderBy(o => o))
+                g.AppendFormat("{0:#####0.00},", price);
 
             var builder = new StringBuilder();
             builder.AppendLine(bn.ToString(0, bn.Length - 1));

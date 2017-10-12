@@ -349,7 +349,8 @@ namespace EbayWorker.ViewModels
                 if (query.Status != SearchStatus.Complete)
                     notCompletedKeywoards.AppendLine(query.Keywoard);
             }
-            File.WriteAllText(notCompletedFileName, notCompletedKeywoards.ToString());
+            if (notCompletedKeywoards.Length > 0)
+                File.WriteAllText(notCompletedFileName, notCompletedKeywoards.ToString());
 
             if (ExcludeEmptyResults)
             {
@@ -375,7 +376,7 @@ namespace EbayWorker.ViewModels
             if (GroupByCondition)
                 contents = query.Books.ToCsvStringGroupedByCondition(AddToPrice);
             else if (GroupByStupidLogic)
-                contents = query.Books.ToCsvStringGroupedByConditionStupidLogic(AddToPrice);
+                contents = query.Books.ToCsvStringGroupedByConditionStupidLogic(AddToPrice, query.Keywoard);
             else
                 contents = query.Books.ToCsvString(AddToPrice);
 
