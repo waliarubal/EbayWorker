@@ -273,10 +273,6 @@ namespace EbayWorker.Models
                 return emptyCsvBuilder.ToString();
             }
 
-            var firstBook = _books[0];
-
-            var x = new List<decimal>();
-
             var bnp = new List<decimal>();
             var lnp = new List<decimal>();
             var vgp = new List<decimal>();

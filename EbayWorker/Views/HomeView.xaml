@@ -139,7 +139,13 @@
                 Grid.Column="1"
                 Header="Output File (CSV)">
                 <StackPanel>
-                    <RadioButton Content="No Grouping" IsChecked="True" />
+                    <!--  TODO: remove this style to make app generic  -->
+                    <StackPanel.Resources>
+                        <Style TargetType="RadioButton">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </Style>
+                    </StackPanel.Resources>
+                    <RadioButton Content="No Grouping" />
                     <RadioButton Content="Books grouped by Condition" IsChecked="{Binding Path=GroupByCondition, Mode=TwoWay}" />
                     <RadioButton Content="Books grouped by Condition (stupid logic)" IsChecked="{Binding Path=GroupByStupidLogic, Mode=TwoWay}" />
                     <TextBlock Text="Add to Price:" />
@@ -219,6 +225,7 @@
                     <ListBox
                         Grid.Row="2"
                         Grid.ColumnSpan="2"
+                        MaxHeight="160"
                         IsEnabled="{Binding Path=Filter.CheckAllowedSellers, Mode=OneWay}"
                         ItemsSource="{Binding Path=Filter.AllowedSellers, Mode=OneWay}" />
 
@@ -245,6 +252,7 @@
                         Grid.Row="2"
                         Grid.Column="2"
                         Grid.ColumnSpan="2"
+                        MaxHeight="160"
                         IsEnabled="{Binding Path=Filter.CheckRestrictedSellers, Mode=OneWay}"
                         ItemsSource="{Binding Path=Filter.RestrictedSellers, Mode=OneWay}" />
                 </Grid>
@@ -279,7 +287,7 @@
                 <TextBlock
                     Margin="4,0,0,0"
                     FontWeight="Bold"
-                    Text="Scraping books data from eBay..." />
+                    Text="Scraping books data from eBay, please wait..." />
             </StackPanel>
             <CheckBox
                 Grid.Column="2"

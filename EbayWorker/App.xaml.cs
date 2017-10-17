@@ -18,7 +18,7 @@ namespace EbayWorker
                 return;
 
             var date = DateTime.Now.GetInternetTime();
-            if (date.Date > new DateTime(2017, 10, 22).Date)
+            if (date.Date > new DateTime(2017, 10, 27).Date)
                 Current.Shutdown(0);
         }
     }

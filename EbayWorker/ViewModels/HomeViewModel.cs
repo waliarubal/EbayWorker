@@ -39,6 +39,10 @@ namespace EbayWorker.ViewModels
         {
             _parallelQueries = 5;
             _executionTime = "00:00:00";
+
+            // TODO: remove this option to make app generic
+            _groupByStupidLogic = true;
+
         }
 
         #region properties
@@ -343,14 +347,17 @@ namespace EbayWorker.ViewModels
             });
 
             // create file with search keywoards which failed to complete
-            var notCompletedKeywoards = new StringBuilder();
-            foreach(var query in SearchQueries)
+            if (notCompletedFileName != null)
             {
-                if (query.Status != SearchStatus.Complete)
-                    notCompletedKeywoards.AppendLine(query.Keywoard);
+                var notCompletedKeywoards = new StringBuilder();
+                foreach (var query in SearchQueries)
+                {
+                    if (query.Status != SearchStatus.Complete)
+                        notCompletedKeywoards.AppendLine(query.Keywoard);
+                }
+                if (notCompletedKeywoards.Length > 0)
+                    File.WriteAllText(notCompletedFileName, notCompletedKeywoards.ToString());
             }
-            if (notCompletedKeywoards.Length > 0)
-                File.WriteAllText(notCompletedFileName, notCompletedKeywoards.ToString());
 
             if (ExcludeEmptyResults)
             {
