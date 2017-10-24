@@ -2,6 +2,7 @@
 using EbayWorker.Helpers.Base;
 using HtmlAgilityPack;
 using System;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -323,8 +324,14 @@ namespace EbayWorker.Models
                 parser.LoadHtml(html);
                 return parser.DocumentNode;
             }
-            catch
+            catch(WebException)
             {
+                Status = SearchStatus.Failed;
+                return null;
+            }
+            catch(Exception ex)
+            {
+                Analytics.Instance.TrackException(ex);
                 Status = SearchStatus.Failed;
                 return null;
             }
