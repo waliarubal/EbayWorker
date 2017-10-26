@@ -11,11 +11,6 @@ namespace EbayWorker.ViewModels
         SearchModel _search;
         CommandBase _openUrl;
 
-        public SearchViewModel()
-        {
-            Analytics.Instance.TrackScreenView("Search Query");
-        }
-
         #region properties
 
         public SearchModel SearchQuery

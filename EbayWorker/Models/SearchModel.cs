@@ -329,9 +329,8 @@ namespace EbayWorker.Models
                 Status = SearchStatus.Failed;
                 return null;
             }
-            catch(Exception ex)
+            catch(Exception)
             {
-                Analytics.Instance.TrackException(ex);
                 Status = SearchStatus.Failed;
                 return null;
             }

@@ -42,8 +42,6 @@ namespace EbayWorker.ViewModels
 
             // TODO: remove this option to make app generic
             _groupByStupidLogic = true;
-
-            Analytics.Instance.TrackScreenView("Home");
         }
 
         #region properties
@@ -285,7 +283,6 @@ namespace EbayWorker.ViewModels
                 {
                     var time = _stopWatch.Elapsed;
                     ExecutionTime = string.Format("{0:00}:{1:00}:{2:00}", time.Hours, time.Minutes, time.Seconds);
-                    Analytics.Instance.TrackTiming(time, "Execution", "Search Query", _searchQueries.Count.ToString());
                 };
                 _timer.Interval = 500;
             }
