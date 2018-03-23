@@ -1,15 +1,16 @@
-﻿using EbayWorker.Helpers;
-using EbayWorker.Helpers.Base;
-using EbayWorker.Models;
+﻿using EbayWorker.Models;
+using NullVoidCreations.WpfHelpers.Base;
+using NullVoidCreations.WpfHelpers.Commands;
 using System;
 using System.Diagnostics;
+using System.Windows.Input;
 
 namespace EbayWorker.ViewModels
 {
     public class SearchViewModel: ViewModelBase
     {
         SearchModel _search;
-        CommandBase _openUrl;
+        ICommand _openUrl;
 
         #region properties
 
@@ -23,7 +24,7 @@ namespace EbayWorker.ViewModels
 
         #region commands
 
-        public CommandBase OpenUrlCommand
+        public ICommand OpenUrlCommand
         {
             get
             {

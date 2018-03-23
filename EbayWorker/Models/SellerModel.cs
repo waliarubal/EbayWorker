@@ -1,4 +1,4 @@
-﻿using EbayWorker.Helpers.Base;
+﻿using NullVoidCreations.WpfHelpers.Base;
 
 namespace EbayWorker.Models
 {

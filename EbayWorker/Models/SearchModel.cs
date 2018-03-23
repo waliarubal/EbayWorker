@@ -1,6 +1,6 @@
-﻿using EbayWorker.Helpers;
-using EbayWorker.Helpers.Base;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
+using NullVoidCreations.WpfHelpers.Base;
+using NullVoidCreations.WpfHelpers.Helpers;
 using System;
 using System.Net;
 using System.Text;

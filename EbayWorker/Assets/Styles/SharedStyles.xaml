@@ -1,13 +1,14 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:c="clr-namespace:EbayWorker.Converters"
+    xmlns:c="clr-namespace:NullVoidCreations.WpfHelpers.Converters;assembly=NullVoidCreations.WpfHelpers"
+    xmlns:lc="clr-namespace:EbayWorker.Converters"
     xmlns:local="clr-namespace:EbayWorker.Assets.Styles">
-    <c:SearchStatusToImageSourceConverter x:Key="SearchStatusToImageSourceConverter" />
+    <lc:SearchStatusToImageSourceConverter x:Key="SearchStatusToImageSourceConverter" />
     <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     <c:EnumToStringConverter x:Key="EnumToStringConverter" />
     <c:InverseBooleanConverter x:Key="InverseBooleanConverter" />
-    <c:SearchStatusToVisibilityConverter x:Key="SearchStatusToVisibilityConverter" />
+    <lc:SearchStatusToVisibilityConverter x:Key="SearchStatusToVisibilityConverter" />
 
     <Style x:Key="BaseStyle" TargetType="FrameworkElement">
         <Setter Property="Margin" Value="2" />

@@ -1,5 +1,4 @@
-﻿using EbayWorker.Helpers;
-using System.Windows;
+﻿using System.Windows;
 
 namespace EbayWorker
 {

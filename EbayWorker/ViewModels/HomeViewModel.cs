@@ -1,9 +1,9 @@
-﻿using EbayWorker.Helpers;
-using EbayWorker.Helpers.Base;
-using EbayWorker.Models;
+﻿using EbayWorker.Models;
 using EbayWorker.Views;
 using HtmlAgilityPack;
 using Microsoft.Win32;
+using NullVoidCreations.WpfHelpers.Base;
+using NullVoidCreations.WpfHelpers.Commands;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +11,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows.Input;
 using Forms = System.Windows.Forms;
 
 namespace EbayWorker.ViewModels
@@ -141,7 +142,7 @@ namespace EbayWorker.ViewModels
 
         #region commands
 
-        public CommandBase SelectInputFileCommand
+        public ICommand SelectInputFileCommand
         {
             get
             {
@@ -152,7 +153,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase SelectOutputDirectoryCommand
+        public ICommand SelectOutputDirectoryCommand
         {
             get
             {
@@ -166,7 +167,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase SearchCommand
+        public ICommand SearchCommand
         {
             get
             {
@@ -177,7 +178,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase ShowSearchQueryCommand
+        public ICommand ShowSearchQueryCommand
         {
             get
             {
@@ -191,7 +192,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase SelectAllowedSellersCommand
+        public ICommand SelectAllowedSellersCommand
         {
             get
             {
@@ -202,7 +203,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase SelectRestrictedSellersCommand
+        public ICommand SelectRestrictedSellersCommand
         {
             get
             {
@@ -213,7 +214,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase ClearAllowedSellersCommand
+        public ICommand ClearAllowedSellersCommand
         {
             get
             {
@@ -224,7 +225,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase ClearRestrictedSellersCommand
+        public ICommand ClearRestrictedSellersCommand
         {
             get
             {
@@ -235,7 +236,7 @@ namespace EbayWorker.ViewModels
             }
         }
 
-        public CommandBase CancelSearchCommand
+        public ICommand CancelSearchCommand
         {
             get
             {
