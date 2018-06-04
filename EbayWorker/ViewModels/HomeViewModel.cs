@@ -405,8 +405,12 @@ namespace EbayWorker.ViewModels
             var searchQueries = new List<SearchModel>();
             foreach (var keywoard in keywoards)
             {
+                var keyWoard = keywoard.Trim('\r', '\n', ' ', '\t');
+                if (string.IsNullOrWhiteSpace(keyWoard))
+                    continue;
+
                 var search = new SearchModel();
-                search.Keywoard = keywoard;
+                search.Keywoard = keyWoard;
                 search.Category = Category.Books;
                 searchQueries.Add(search);
             }
