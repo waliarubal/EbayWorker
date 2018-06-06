@@ -67,6 +67,7 @@ namespace EbayWorker.Models
 
         internal void Search(ref HtmlDocument parser, SearchFilter filter, int parallelQueries, bool scrapBooksInParallel)
         {
+
             var client = new ExtendedWebClient(parallelQueries);
 
             var queryStringBuilder = new StringBuilder();
@@ -101,6 +102,7 @@ namespace EbayWorker.Models
             Status = SearchStatus.Working;
             _books.Clear();
 
+            RECURSE:
             var rootNode = Load(ref client, ref parser, url.Uri);
             if (rootNode == null)
             {
@@ -112,9 +114,14 @@ namespace EbayWorker.Models
             rootNode = rootNode.SelectSingleNode(".//ul[@id='ListViewInner']");
             if (rootNode == null)
             {
+                // try to recursively load product data
+                goto RECURSE;
+
                 // no listing found
+                /*
                 Status = SearchStatus.Complete;
                 return;
+                */
             }
 
             var nodes = rootNode.SelectNodes(".//li[starts-with(@id,'item')]");
