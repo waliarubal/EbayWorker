@@ -4,24 +4,26 @@ using NullVoidCreations.WpfHelpers.Helpers;
 using System;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace EbayWorker.Models
 {
-    public enum Category: int
+    public enum Category : int
     {
         Books = 267
     }
 
-    public enum SearchStatus: byte
+    public enum SearchStatus : byte
     {
         NotStarted,
         Working,
         Complete,
-        Failed
+        Failed,
+        Cancelled
     }
 
-    public class SearchModel: NotificationBase
+    public class SearchModel : NotificationBase
     {
         const int ResultsPerPage = 200;
 
@@ -65,7 +67,7 @@ namespace EbayWorker.Models
 
         #endregion
 
-        internal void Search(ref HtmlDocument parser, SearchFilter filter, int parallelQueries, bool scrapBooksInParallel)
+        internal void Search(ref HtmlDocument parser, SearchFilter filter, int parallelQueries, bool scrapBooksInParallel, bool autoRetry, CancellationToken cancellationToken)
         {
 
             var client = new ExtendedWebClient(parallelQueries);
@@ -85,7 +87,7 @@ namespace EbayWorker.Models
                 if (filter.MaximumPrice > 0)
                     queryStringBuilder.AppendFormat("&_udhi={0}", filter.MaximumPrice);
             }
-                
+
             if (filter.IsAuction)
                 queryStringBuilder.Append("&LH_Auction=1");
             if (filter.IsBuyItNow)
@@ -102,11 +104,23 @@ namespace EbayWorker.Models
             Status = SearchStatus.Working;
             _books.Clear();
 
-            RECURSE:
+            if (cancellationToken.IsCancellationRequested)
+            {
+                Status = SearchStatus.Cancelled;
+                return;
+            }
+
+        RECURSE:
             var rootNode = Load(ref client, ref parser, url.Uri);
             if (rootNode == null)
             {
                 Status = SearchStatus.Failed;
+                return;
+            }
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                Status = SearchStatus.Cancelled;
                 return;
             }
 
@@ -115,13 +129,12 @@ namespace EbayWorker.Models
             if (rootNode == null)
             {
                 // try to recursively load product data
-                goto RECURSE;
+                if (autoRetry)
+                    goto RECURSE;
 
                 // no listing found
-                /*
                 Status = SearchStatus.Complete;
                 return;
-                */
             }
 
             var nodes = rootNode.SelectNodes(".//li[starts-with(@id,'item')]");
@@ -174,21 +187,22 @@ namespace EbayWorker.Models
             if (scrapBooksInParallel)
             {
                 var parallelOptions = new ParallelOptions();
+                parallelOptions.CancellationToken = cancellationToken;
                 parallelOptions.MaxDegreeOfParallelism = parallelQueries;
 
-                Parallel.ForEach(_books.Items, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelQueries));
+                Parallel.ForEach(_books.Items, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelOptions.CancellationToken, parallelQueries));
             }
             else
             {
-                for(var index = _books.Count -1; index >= 0; index--)
+                for (var index = _books.Count - 1; index >= 0; index--)
                 {
                     var book = _books[index];
-                    ProcessBook(book, filter);
+                    ProcessBook(book, filter, cancellationToken);
                 }
             }
 
             // apply filter
-            for(var index = _books.Count -1; index >= 0; index--)
+            for (var index = _books.Count - 1; index >= 0; index--)
             {
                 var book = _books[index];
                 if (book.Status == SearchStatus.Complete && IncludeBook(book, filter) == false)
@@ -200,10 +214,16 @@ namespace EbayWorker.Models
                 Status = SearchStatus.Complete;
         }
 
-        void ProcessBook(BookModel currentBook, SearchFilter filter, int pallelWebRequests = 1)
+        void ProcessBook(BookModel currentBook, SearchFilter filter, CancellationToken cancellationToken, int pallelWebRequests = 1)
         {
             var bookParser = new HtmlDocument();
             var client = new ExtendedWebClient(pallelWebRequests);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                currentBook.Status = Status = SearchStatus.Cancelled;
+                return;
+            }
 
             currentBook.Status = SearchStatus.Working;
             var rootNode = Load(ref client, ref bookParser, currentBook.Url);
@@ -331,12 +351,12 @@ namespace EbayWorker.Models
                 parser.LoadHtml(html);
                 return parser.DocumentNode;
             }
-            catch(WebException)
+            catch (WebException)
             {
                 Status = SearchStatus.Failed;
                 return null;
             }
-            catch(Exception)
+            catch (Exception)
             {
                 Status = SearchStatus.Failed;
                 return null;

@@ -21,6 +21,9 @@ namespace EbayWorker.Converters
                 case SearchStatus.Failed:
                     return string.Format(uriFormat, "Error16");
 
+                case SearchStatus.Cancelled:
+                    return string.Format(uriFormat, "Cancel16");
+
                 case SearchStatus.NotStarted:
                 default:
                     return null;

@@ -16,19 +16,20 @@ using Forms = System.Windows.Forms;
 
 namespace EbayWorker.ViewModels
 {
-    public class HomeViewModel: ViewModelBase
+    public class HomeViewModel : ViewModelBase
     {
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
-        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _cancelFlag;
+        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _addPercentOfPice, _autoRetry;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
         decimal _addToPrice;
         static object _syncLock;
+        System.Threading.CancellationTokenSource _cancellationToken;
 
         Timer _timer;
         Stopwatch _stopWatch;
-        
+
         CommandBase _cancelSearch, _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
 
         static HomeViewModel()
@@ -57,6 +58,12 @@ namespace EbayWorker.ViewModels
         {
             get { return _addToPrice; }
             set { Set(nameof(AddToPrice), ref _addToPrice, value); }
+        }
+
+        public bool AddPercentOfPrice
+        {
+            get { return _addPercentOfPice; }
+            set { Set(nameof(AddPercentOfPrice), ref _addPercentOfPice, value); }
         }
 
         public int ExecutedQueries
@@ -112,6 +119,12 @@ namespace EbayWorker.ViewModels
         {
             get { return _failedQueriesOnly; }
             set { Set(nameof(FailedQueriesOnly), ref _failedQueriesOnly, value); }
+        }
+
+        public bool AutoRetry
+        {
+            get { return _autoRetry; }
+            set { Set(nameof(AutoRetry), ref _autoRetry, value); }
         }
 
         public bool ScrapBooksInParallel
@@ -241,7 +254,7 @@ namespace EbayWorker.ViewModels
             get
             {
                 if (_cancelSearch == null)
-                    _cancelSearch = new RelayCommand(() => _cancelFlag = true);
+                    _cancelSearch = new RelayCommand(() => _cancellationToken.Cancel(false));
 
                 return _cancelSearch;
             }
@@ -320,31 +333,41 @@ namespace EbayWorker.ViewModels
                 notCompletedFileName = Path.Combine(OutputDirectoryPath, string.Format("{0}_not_completed.txt", fileTime));
             }
 
+            _cancellationToken = new System.Threading.CancellationTokenSource();
+
             var parallelOptions = new ParallelOptions();
+            parallelOptions.CancellationToken = _cancellationToken.Token;
             parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
 
-            Parallel.ForEach(SearchQueries, parallelOptions, query =>
+            try
             {
-                if (_cancelFlag)
-                    return;
-
-                var status = query.Status;
-                if (status == SearchStatus.Working)
-                    return;
-
-                var parser = new HtmlDocument();
-                if (FailedQueriesOnly)
+                Parallel.ForEach(SearchQueries, parallelOptions, query =>
                 {
-                    if (status != SearchStatus.Complete)
-                        query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel);
-                }                    
-                else
-                    query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel);
+                    if (parallelOptions.CancellationToken.IsCancellationRequested)
+                        return;
 
-                WriteOutput(fileName, query);
+                    var status = query.Status;
+                    if (status == SearchStatus.Working)
+                        return;
 
-                ExecutedQueries += 1;
-            });
+                    var parser = new HtmlDocument();
+                    if (FailedQueriesOnly)
+                    {
+                        if (status != SearchStatus.Complete)
+                            query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+                    }
+                    else
+                        query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+
+                    WriteOutput(fileName, query);
+
+                    ExecutedQueries += 1;
+                });
+            }
+            catch(OperationCanceledException)
+            {
+                // do nothing, cancelled by user
+            }
 
             // create file with search keywoards which failed to complete
             if (notCompletedFileName != null)
@@ -361,7 +384,7 @@ namespace EbayWorker.ViewModels
 
             if (ExcludeEmptyResults)
             {
-                for(var index = SearchQueries.Count -1; index >=0; index--)
+                for (var index = SearchQueries.Count - 1; index >= 0; index--)
                 {
                     var query = SearchQueries[index];
                     if (query.Status == SearchStatus.Complete && query.Books.Count == 0)
@@ -370,24 +393,24 @@ namespace EbayWorker.ViewModels
                 RaisePropertyChanged(nameof(SearchQueries));
             }
 
-            _cancelFlag = false;
+            _cancellationToken.Dispose();
             StopTimer();
         }
 
-        void WriteOutput(string fileName,SearchModel query)
+        void WriteOutput(string fileName, SearchModel query)
         {
             if (fileName == null || query.Status != SearchStatus.Complete)
                 return;
 
             string contents;
             if (GroupByCondition)
-                contents = query.Books.ToCsvStringGroupedByCondition(AddToPrice);
+                contents = query.Books.ToCsvStringGroupedByCondition(AddToPrice, AddPercentOfPrice);
             else if (GroupByStupidLogic)
-                contents = query.Books.ToCsvStringGroupedByConditionStupidLogic(AddToPrice, query.Keywoard);
+                contents = query.Books.ToCsvStringGroupedByConditionStupidLogic(AddToPrice, AddPercentOfPrice, query.Keywoard);
             else
-                contents = query.Books.ToCsvString(AddToPrice);
+                contents = query.Books.ToCsvString(AddToPrice, AddPercentOfPrice);
 
-            lock(_syncLock)
+            lock (_syncLock)
             {
                 File.AppendAllText(fileName, contents);
             }
