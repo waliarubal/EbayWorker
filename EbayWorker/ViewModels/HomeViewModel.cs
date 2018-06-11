@@ -2,6 +2,7 @@
 using EbayWorker.Views;
 using HtmlAgilityPack;
 using Microsoft.Win32;
+using NullVoidCreations.WpfHelpers;
 using NullVoidCreations.WpfHelpers.Base;
 using NullVoidCreations.WpfHelpers.Commands;
 using System;
@@ -18,17 +19,20 @@ namespace EbayWorker.ViewModels
 {
     public class HomeViewModel : ViewModelBase
     {
+        readonly string _settingsFile;
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
         bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _addPercentOfPice, _autoRetry;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
         decimal _addToPrice;
-        static object _syncLock;
         System.Threading.CancellationTokenSource _cancellationToken;
-
         Timer _timer;
         Stopwatch _stopWatch;
+        static object _syncLock;
+
+        const string SETTINGS_FILE_NAME = "Settings.config";
+        const string SETTINGS_FILE_PASSWORD = "$admin@12345#";
 
         CommandBase _cancelSearch, _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
 
@@ -41,6 +45,7 @@ namespace EbayWorker.ViewModels
         {
             _parallelQueries = 5;
             _executionTime = "00:00:00";
+            _settingsFile = Path.Combine(App.Current.GetStartupDirectory(), SETTINGS_FILE_NAME);
 
             // TODO: remove this option to make app generic
             _groupByStupidLogic = true;
@@ -261,6 +266,42 @@ namespace EbayWorker.ViewModels
         }
 
         #endregion
+
+        void SaveSettings()
+        {
+            var settings = new SettingsManager();
+            settings.SetValue(nameof(AddToPrice), AddToPrice);
+            settings.SetValue(nameof(AddPercentOfPrice), AddPercentOfPrice);
+            settings.SetValue(nameof(ParallelQueries), ParallelQueries);
+            settings.SetValue(nameof(FailedQueriesOnly), FailedQueriesOnly);
+            settings.SetValue(nameof(AutoRetry), AutoRetry);
+            settings.SetValue(nameof(ScrapBooksInParallel), ScrapBooksInParallel);
+            settings.SetValue(nameof(ExcludeEmptyResults), ExcludeEmptyResults);
+            settings.SetValue(nameof(GroupByCondition), GroupByCondition);
+            settings.SetValue(nameof(GroupByStupidLogic), GroupByStupidLogic);
+            settings.SetValue(nameof(Filter.Location), Filter.Location);
+            settings.SetValue(nameof(Filter.CheckFeedbackScore), Filter.CheckFeedbackScore);
+            settings.SetValue(nameof(Filter.FeedbackScore), Filter.FeedbackScore);
+            settings.SetValue(nameof(Filter.CheckFeedbackPercent), Filter.FeedbackPercent);
+            settings.SetValue(nameof(Filter.FeedbackPercent), Filter.FeedbackPercent);
+            settings.SetValue(nameof(Filter.IsPriceFiltered), Filter.IsPriceFiltered);
+            settings.SetValue(nameof(Filter.MinimumPrice), Filter.MinimumPrice);
+            settings.SetValue(nameof(Filter.MaximumPrice), Filter.MaximumPrice);
+            settings.SetValue(nameof(Filter.CheckAllowedSellers), Filter.CheckAllowedSellers);
+            settings.SetValue(nameof(Filter.AllowedSellers), Filter.AllowedSellers);
+            settings.SetValue(nameof(Filter.CheckRestrictedSellers), Filter.CheckRestrictedSellers);
+            settings.SetValue(nameof(Filter.RestrictedSellers), Filter.RestrictedSellers);
+            settings.SetValue(nameof(Filter.IsAuction), Filter.IsAuction);
+            settings.SetValue(nameof(Filter.IsBuyItNow), Filter.IsBuyItNow);
+            settings.SetValue(nameof(Filter.IsClassifiedAds), Filter.IsClassifiedAds);
+            settings.Save(_settingsFile, SETTINGS_FILE_PASSWORD);
+        }
+
+        void LoadSettings()
+        {
+            var settings = new SettingsManager();
+            settings.Load(_settingsFile, SETTINGS_FILE_PASSWORD);
+        }
 
         HashSet<string> SelectSellers(object parameter)
         {
