@@ -31,7 +31,7 @@ namespace EbayWorker.ViewModels
         Stopwatch _stopWatch;
         static object _syncLock;
 
-        const string SETTINGS_FILE_NAME = "Settings.config";
+        const string SETTINGS_FILE_NAME = "Settings.set";
         const string SETTINGS_FILE_PASSWORD = "$admin@12345#";
 
         CommandBase _cancelSearch, _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
@@ -47,8 +47,16 @@ namespace EbayWorker.ViewModels
             _executionTime = "00:00:00";
             _settingsFile = Path.Combine(App.Current.GetStartupDirectory(), SETTINGS_FILE_NAME);
 
+            LoadSettings();
+
             // TODO: remove this option to make app generic
             _groupByStupidLogic = true;
+
+        }
+
+        ~HomeViewModel()
+        {
+            SaveSettings();
         }
 
         #region properties
@@ -62,13 +70,35 @@ namespace EbayWorker.ViewModels
         public decimal AddToPrice
         {
             get { return _addToPrice; }
-            set { Set(nameof(AddToPrice), ref _addToPrice, value); }
+            set
+            {
+                if (AddPercentOfPrice)
+                {
+                    if (value > 100m)
+                        value = 100m;
+                    else if (value < 0m)
+                        value = 0m;
+                }
+
+                Set(nameof(AddToPrice), ref _addToPrice, value);
+            }
         }
 
         public bool AddPercentOfPrice
         {
             get { return _addPercentOfPice; }
-            set { Set(nameof(AddPercentOfPrice), ref _addPercentOfPice, value); }
+            set
+            {
+                Set(nameof(AddPercentOfPrice), ref _addPercentOfPice, value);
+
+                if (AddPercentOfPrice)
+                {
+                    if (AddToPrice > 100m)
+                        AddToPrice = 100m;
+                    else if (AddToPrice < 0m)
+                        AddToPrice = 0m;
+                }     
+            }
         }
 
         public int ExecutedQueries
@@ -111,7 +141,15 @@ namespace EbayWorker.ViewModels
         public int ParallelQueries
         {
             get { return _parallelQueries; }
-            set { Set(nameof(ParallelQueries), ref _parallelQueries, value); }
+            set
+            {
+                if (value <= 0)
+                    value = 1;
+                else if (value > MaxParallelQueries)
+                    value = MaxParallelQueries;
+
+                Set(nameof(ParallelQueries), ref _parallelQueries, value);
+            }
         }
 
         public List<SearchModel> SearchQueries
@@ -282,7 +320,7 @@ namespace EbayWorker.ViewModels
             settings.SetValue(nameof(Filter.Location), Filter.Location);
             settings.SetValue(nameof(Filter.CheckFeedbackScore), Filter.CheckFeedbackScore);
             settings.SetValue(nameof(Filter.FeedbackScore), Filter.FeedbackScore);
-            settings.SetValue(nameof(Filter.CheckFeedbackPercent), Filter.FeedbackPercent);
+            settings.SetValue(nameof(Filter.CheckFeedbackPercent), Filter.CheckFeedbackPercent);
             settings.SetValue(nameof(Filter.FeedbackPercent), Filter.FeedbackPercent);
             settings.SetValue(nameof(Filter.IsPriceFiltered), Filter.IsPriceFiltered);
             settings.SetValue(nameof(Filter.MinimumPrice), Filter.MinimumPrice);
@@ -310,6 +348,21 @@ namespace EbayWorker.ViewModels
             ExcludeEmptyResults = settings.GetValue<bool>(nameof(ExcludeEmptyResults));
             GroupByCondition = settings.GetValue<bool>(nameof(GroupByCondition));
             GroupByStupidLogic = settings.GetValue<bool>(nameof(GroupByStupidLogic));
+            Filter.Location = settings.GetValue<string>(nameof(Filter.Location));
+            Filter.CheckFeedbackScore = settings.GetValue<bool>(nameof(Filter.CheckFeedbackScore));
+            Filter.FeedbackScore = settings.GetValue<long>(nameof(Filter.FeedbackScore));
+            Filter.CheckFeedbackPercent = settings.GetValue<bool>(nameof(Filter.CheckFeedbackPercent));
+            Filter.FeedbackPercent = settings.GetValue<decimal>(nameof(Filter.FeedbackPercent));
+            Filter.IsPriceFiltered = settings.GetValue<bool>(nameof(Filter.IsPriceFiltered));
+            Filter.MinimumPrice = settings.GetValue<decimal>(nameof(Filter.MinimumPrice));
+            Filter.MaximumPrice = settings.GetValue<decimal>(nameof(Filter.MaximumPrice));
+            Filter.CheckAllowedSellers = settings.GetValue<bool>(nameof(Filter.CheckAllowedSellers));
+            Filter.AllowedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.AllowedSellers));
+            Filter.CheckRestrictedSellers = settings.GetValue<bool>(nameof(Filter.CheckRestrictedSellers));
+            Filter.RestrictedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.RestrictedSellers));
+            Filter.IsAuction = settings.GetValue<bool>(nameof(Filter.IsAuction));
+            Filter.IsBuyItNow = settings.GetValue<bool>(nameof(Filter.IsBuyItNow));
+            Filter.IsClassifiedAds = settings.GetValue<bool>(nameof(Filter.IsClassifiedAds));
         }
 
         HashSet<string> SelectSellers(object parameter)
