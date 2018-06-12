@@ -301,6 +301,15 @@ namespace EbayWorker.ViewModels
         {
             var settings = new SettingsManager();
             settings.Load(_settingsFile, SETTINGS_FILE_PASSWORD);
+            AddToPrice = settings.GetValue<decimal>(nameof(AddToPrice));
+            AddPercentOfPrice = settings.GetValue<bool>(nameof(AddPercentOfPrice));
+            ParallelQueries = settings.GetValue<int>(nameof(ParallelQueries));
+            FailedQueriesOnly = settings.GetValue<bool>(nameof(FailedQueriesOnly));
+            AutoRetry = settings.GetValue<bool>(nameof(AutoRetry));
+            ScrapBooksInParallel = settings.GetValue<bool>(nameof(ScrapBooksInParallel));
+            ExcludeEmptyResults = settings.GetValue<bool>(nameof(ExcludeEmptyResults));
+            GroupByCondition = settings.GetValue<bool>(nameof(GroupByCondition));
+            GroupByStupidLogic = settings.GetValue<bool>(nameof(GroupByStupidLogic));
         }
 
         HashSet<string> SelectSellers(object parameter)
