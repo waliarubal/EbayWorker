@@ -31,7 +31,7 @@ namespace EbayWorker.ViewModels
         Stopwatch _stopWatch;
         static object _syncLock;
 
-        const string SETTINGS_FILE_NAME = "Settings.set";
+        const string SETTINGS_FILE_NAME = "Settings.set.aes";
         const string SETTINGS_FILE_PASSWORD = "$admin@12345#";
 
         CommandBase _cancelSearch, _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
@@ -326,9 +326,9 @@ namespace EbayWorker.ViewModels
             settings.SetValue(nameof(Filter.MinimumPrice), Filter.MinimumPrice);
             settings.SetValue(nameof(Filter.MaximumPrice), Filter.MaximumPrice);
             settings.SetValue(nameof(Filter.CheckAllowedSellers), Filter.CheckAllowedSellers);
-            settings.SetValue(nameof(Filter.AllowedSellers), Filter.AllowedSellers);
+            //settings.SetValue(nameof(Filter.AllowedSellers), Filter.AllowedSellers);
             settings.SetValue(nameof(Filter.CheckRestrictedSellers), Filter.CheckRestrictedSellers);
-            settings.SetValue(nameof(Filter.RestrictedSellers), Filter.RestrictedSellers);
+            //settings.SetValue(nameof(Filter.RestrictedSellers), Filter.RestrictedSellers);
             settings.SetValue(nameof(Filter.IsAuction), Filter.IsAuction);
             settings.SetValue(nameof(Filter.IsBuyItNow), Filter.IsBuyItNow);
             settings.SetValue(nameof(Filter.IsClassifiedAds), Filter.IsClassifiedAds);
@@ -341,14 +341,14 @@ namespace EbayWorker.ViewModels
             settings.Load(_settingsFile, SETTINGS_FILE_PASSWORD);
             AddToPrice = settings.GetValue<decimal>(nameof(AddToPrice));
             AddPercentOfPrice = settings.GetValue<bool>(nameof(AddPercentOfPrice));
-            ParallelQueries = settings.GetValue<int>(nameof(ParallelQueries));
+            ParallelQueries = settings.GetValue<int>(nameof(ParallelQueries), 5);
             FailedQueriesOnly = settings.GetValue<bool>(nameof(FailedQueriesOnly));
             AutoRetry = settings.GetValue<bool>(nameof(AutoRetry));
             ScrapBooksInParallel = settings.GetValue<bool>(nameof(ScrapBooksInParallel));
             ExcludeEmptyResults = settings.GetValue<bool>(nameof(ExcludeEmptyResults));
             GroupByCondition = settings.GetValue<bool>(nameof(GroupByCondition));
             GroupByStupidLogic = settings.GetValue<bool>(nameof(GroupByStupidLogic));
-            Filter.Location = settings.GetValue<string>(nameof(Filter.Location));
+            Filter.Location = settings.GetValue<string>(nameof(Filter.Location), "United States");
             Filter.CheckFeedbackScore = settings.GetValue<bool>(nameof(Filter.CheckFeedbackScore));
             Filter.FeedbackScore = settings.GetValue<long>(nameof(Filter.FeedbackScore));
             Filter.CheckFeedbackPercent = settings.GetValue<bool>(nameof(Filter.CheckFeedbackPercent));
@@ -357,11 +357,11 @@ namespace EbayWorker.ViewModels
             Filter.MinimumPrice = settings.GetValue<decimal>(nameof(Filter.MinimumPrice));
             Filter.MaximumPrice = settings.GetValue<decimal>(nameof(Filter.MaximumPrice));
             Filter.CheckAllowedSellers = settings.GetValue<bool>(nameof(Filter.CheckAllowedSellers));
-            Filter.AllowedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.AllowedSellers));
+            //Filter.AllowedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.AllowedSellers));
             Filter.CheckRestrictedSellers = settings.GetValue<bool>(nameof(Filter.CheckRestrictedSellers));
-            Filter.RestrictedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.RestrictedSellers));
+            //Filter.RestrictedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.RestrictedSellers));
             Filter.IsAuction = settings.GetValue<bool>(nameof(Filter.IsAuction));
-            Filter.IsBuyItNow = settings.GetValue<bool>(nameof(Filter.IsBuyItNow));
+            Filter.IsBuyItNow = settings.GetValue<bool>(nameof(Filter.IsBuyItNow), true);
             Filter.IsClassifiedAds = settings.GetValue<bool>(nameof(Filter.IsClassifiedAds));
         }
 
