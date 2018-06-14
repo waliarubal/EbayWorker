@@ -1,7 +1,9 @@
 ﻿using HtmlAgilityPack;
+using NullVoidCreations.WpfHelpers;
 using NullVoidCreations.WpfHelpers.Base;
 using NullVoidCreations.WpfHelpers.Helpers;
 using System;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -25,8 +27,10 @@ namespace EbayWorker.Models
 
     public class SearchModel : NotificationBase
     {
-        const int ResultsPerPage = 200;
+        const int RESULTS_PER_PAGE = 200;
+        const string USER_AGENT = "Mozilla / 5.0(Windows NT 10.0; Win64; x64; rv:60.0) Gecko/20100101 Firefox/60.0";
 
+        readonly string _cacheDirectory;
         string _keywoard;
         Category _category;
         SearchStatus _status;
@@ -35,6 +39,7 @@ namespace EbayWorker.Models
 
         public SearchModel()
         {
+            _cacheDirectory = Path.Combine(App.Current.GetStartupDirectory(), "Cache");
             _books = new BookCollection();
             _conditionType = typeof(BookCondition);
         }
@@ -67,15 +72,12 @@ namespace EbayWorker.Models
 
         #endregion
 
-        internal void Search(ref HtmlDocument parser, SearchFilter filter, int parallelQueries, bool scrapBooksInParallel, bool autoRetry, CancellationToken cancellationToken)
+        internal void Search(SearchFilter filter, int parallelQueries, bool scrapBooksInParallel, bool autoRetry, CancellationToken cancellationToken)
         {
-
-            var client = new ExtendedWebClient(parallelQueries);
-
             var queryStringBuilder = new StringBuilder();
             queryStringBuilder.AppendFormat("_nkw={0}&", Keywoard);
             queryStringBuilder.AppendFormat("_sacat={0}&", (int)Category);
-            queryStringBuilder.AppendFormat("_ipg={0}", ResultsPerPage);
+            queryStringBuilder.AppendFormat("_ipg={0}", RESULTS_PER_PAGE);
             var location = filter.GetLocation();
             if (location > 0)
                 queryStringBuilder.AppendFormat("LH_LocatedIn=1&_salic={0}&LH_SubLocation=1", location);
@@ -110,8 +112,9 @@ namespace EbayWorker.Models
                 return;
             }
 
-        RECURSE:
-            var rootNode = Load(ref client, ref parser, url.Uri);
+            RECURSE:
+
+            var rootNode = Load(url.Uri);
             if (rootNode == null)
             {
                 Status = SearchStatus.Failed;
@@ -226,7 +229,7 @@ namespace EbayWorker.Models
             }
 
             currentBook.Status = SearchStatus.Working;
-            var rootNode = Load(ref client, ref bookParser, currentBook.Url);
+            var rootNode = Load(currentBook.Url);
             if (rootNode == null)
             {
                 currentBook.Status = Status = SearchStatus.Failed;
@@ -343,6 +346,7 @@ namespace EbayWorker.Models
             return default(decimal);
         }
 
+        [Obsolete]
         HtmlNode Load(ref ExtendedWebClient client, ref HtmlDocument parser, Uri uri)
         {
             try
@@ -361,6 +365,16 @@ namespace EbayWorker.Models
                 Status = SearchStatus.Failed;
                 return null;
             }
+        }
+
+        HtmlNode Load(Uri uri)
+        {
+            var web = new HtmlWeb();
+            web.UseCookies = true;
+            web.UserAgent = USER_AGENT;
+            var document = web.Load(uri);
+
+            return document.DocumentNode;
         }
 
     }

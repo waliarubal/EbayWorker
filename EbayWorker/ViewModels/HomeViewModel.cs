@@ -457,10 +457,10 @@ namespace EbayWorker.ViewModels
                     if (FailedQueriesOnly)
                     {
                         if (status != SearchStatus.Complete)
-                            query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+                            query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
                     }
                     else
-                        query.Search(ref parser, Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+                        query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
 
                     WriteOutput(fileName, query);
 
