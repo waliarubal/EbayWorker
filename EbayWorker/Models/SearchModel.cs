@@ -3,6 +3,7 @@ using NullVoidCreations.WpfHelpers;
 using NullVoidCreations.WpfHelpers.Base;
 using NullVoidCreations.WpfHelpers.Helpers;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -117,6 +118,10 @@ namespace EbayWorker.Models
             var rootNode = Load(url.Uri);
             if (rootNode == null)
             {
+                // try to recursively load product data
+                if (autoRetry)
+                    goto RECURSE;
+
                 Status = SearchStatus.Failed;
                 return;
             }
@@ -193,7 +198,15 @@ namespace EbayWorker.Models
                 parallelOptions.CancellationToken = cancellationToken;
                 parallelOptions.MaxDegreeOfParallelism = parallelQueries;
 
-                Parallel.ForEach(_books.Items, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelOptions.CancellationToken, parallelQueries));
+                try
+                {
+                    Parallel.ForEach(_books.Items, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelOptions.CancellationToken, parallelQueries));
+                }
+                catch(OperationCanceledException)
+                {
+                    // ignore cancellations
+                }
+                
             }
             else
             {
@@ -369,10 +382,24 @@ namespace EbayWorker.Models
 
         HtmlNode Load(Uri uri)
         {
+            var watch = new System.Diagnostics.Stopwatch();
+            watch.Start();
+
             var web = new HtmlWeb();
             web.UseCookies = true;
             web.UserAgent = USER_AGENT;
-            var document = web.Load(uri);
+            HtmlDocument document;
+            try
+            {
+                document = web.Load(uri);
+            }
+            catch(IOException)
+            {
+                return null;
+            }
+            
+            watch.Stop();
+            Debug.WriteLine("Downloaded page {0} in {1} ms.", uri, watch.ElapsedMilliseconds);
 
             return document.DocumentNode;
         }
