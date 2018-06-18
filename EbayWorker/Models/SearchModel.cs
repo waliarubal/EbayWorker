@@ -202,9 +202,9 @@ namespace EbayWorker.Models
                 {
                     Parallel.ForEach(_books.Items, parallelOptions, (currentBook) => ProcessBook(currentBook, filter, parallelOptions.CancellationToken, parallelQueries));
                 }
-                catch(OperationCanceledException)
+                catch(Exception)
                 {
-                    // ignore cancellations
+                    // do nothing
                 }
                 
             }
@@ -213,7 +213,14 @@ namespace EbayWorker.Models
                 for (var index = _books.Count - 1; index >= 0; index--)
                 {
                     var book = _books[index];
-                    ProcessBook(book, filter, cancellationToken);
+                    try
+                    {
+                        ProcessBook(book, filter, cancellationToken);
+                    }
+                    catch(Exception)
+                    {
+                        // do nothing
+                    }
                 }
             }
 
@@ -382,7 +389,7 @@ namespace EbayWorker.Models
 
         HtmlNode Load(Uri uri)
         {
-            var watch = new System.Diagnostics.Stopwatch();
+            var watch = new Stopwatch();
             watch.Start();
 
             var web = new HtmlWeb();
@@ -391,9 +398,9 @@ namespace EbayWorker.Models
             HtmlDocument document;
             try
             {
-                document = web.Load(uri);
+                document = web.Load(uri, WebRequestMethods.Http.Get);
             }
-            catch(IOException)
+            catch(Exception)
             {
                 return null;
             }
