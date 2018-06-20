@@ -1,6 +1,5 @@
 ﻿using EbayWorker.Models;
 using EbayWorker.Views;
-using HtmlAgilityPack;
 using Microsoft.Win32;
 using NullVoidCreations.WpfHelpers;
 using NullVoidCreations.WpfHelpers.Base;
@@ -19,6 +18,8 @@ namespace EbayWorker.ViewModels
 {
     public class HomeViewModel : ViewModelBase
     {
+        const char SEPARATOR = 'μ';
+
         readonly string _settingsFile;
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
@@ -326,9 +327,9 @@ namespace EbayWorker.ViewModels
             settings.SetValue(nameof(Filter.MinimumPrice), Filter.MinimumPrice);
             settings.SetValue(nameof(Filter.MaximumPrice), Filter.MaximumPrice);
             settings.SetValue(nameof(Filter.CheckAllowedSellers), Filter.CheckAllowedSellers);
-            //settings.SetValue(nameof(Filter.AllowedSellers), Filter.AllowedSellers);
+            settings.SetValue(nameof(Filter.AllowedSellers), EnumerableToString(Filter.AllowedSellers));
             settings.SetValue(nameof(Filter.CheckRestrictedSellers), Filter.CheckRestrictedSellers);
-            //settings.SetValue(nameof(Filter.RestrictedSellers), Filter.RestrictedSellers);
+            settings.SetValue(nameof(Filter.RestrictedSellers), EnumerableToString(Filter.RestrictedSellers));
             settings.SetValue(nameof(Filter.IsAuction), Filter.IsAuction);
             settings.SetValue(nameof(Filter.IsBuyItNow), Filter.IsBuyItNow);
             settings.SetValue(nameof(Filter.IsClassifiedAds), Filter.IsClassifiedAds);
@@ -357,12 +358,37 @@ namespace EbayWorker.ViewModels
             Filter.MinimumPrice = settings.GetValue<decimal>(nameof(Filter.MinimumPrice));
             Filter.MaximumPrice = settings.GetValue<decimal>(nameof(Filter.MaximumPrice));
             Filter.CheckAllowedSellers = settings.GetValue<bool>(nameof(Filter.CheckAllowedSellers));
-            //Filter.AllowedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.AllowedSellers));
+            Filter.AllowedSellers = StringToEnumerable(settings.GetValue<string>(nameof(Filter.AllowedSellers)));
             Filter.CheckRestrictedSellers = settings.GetValue<bool>(nameof(Filter.CheckRestrictedSellers));
-            //Filter.RestrictedSellers = settings.GetValue<HashSet<string>>(nameof(Filter.RestrictedSellers));
+            Filter.RestrictedSellers = StringToEnumerable(settings.GetValue<string>(nameof(Filter.RestrictedSellers)));
             Filter.IsAuction = settings.GetValue<bool>(nameof(Filter.IsAuction));
             Filter.IsBuyItNow = settings.GetValue<bool>(nameof(Filter.IsBuyItNow), true);
             Filter.IsClassifiedAds = settings.GetValue<bool>(nameof(Filter.IsClassifiedAds));
+        }
+
+        string EnumerableToString(IEnumerable<string> values)
+        {
+            var builder = new StringBuilder();
+            foreach (var value in values)
+                builder.AppendFormat("{0}{1}", value, SEPARATOR);
+            return builder.ToString();
+        }
+
+        HashSet<string> StringToEnumerable(string values)
+        {
+            var data = new HashSet<string>();
+            if (string.IsNullOrEmpty(values))
+                return data;
+
+            foreach (var value in values.Split(new[] { SEPARATOR }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                if (data.Contains(value))
+                    continue;
+
+                data.Add(value);
+            }
+
+            return data;
         }
 
         HashSet<string> SelectSellers(object parameter)
@@ -442,35 +468,41 @@ namespace EbayWorker.ViewModels
             parallelOptions.CancellationToken = _cancellationToken.Token;
             parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
 
-
-            Parallel.ForEach(SearchQueries, parallelOptions, query =>
+            try
             {
-                if (parallelOptions.CancellationToken.IsCancellationRequested)
-                    return;
-
-                var status = query.Status;
-                if (status == SearchStatus.Working)
-                    return;
-
-                try
+                Parallel.ForEach(SearchQueries, parallelOptions, query =>
                 {
-                    if (FailedQueriesOnly)
+                    if (parallelOptions.CancellationToken.IsCancellationRequested)
+                        return;
+
+                    var status = query.Status;
+                    if (status == SearchStatus.Working)
+                        return;
+
+                    try
                     {
-                        if (status != SearchStatus.Complete)
+                        if (FailedQueriesOnly)
+                        {
+                            if (status != SearchStatus.Complete)
+                                query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+                        }
+                        else
                             query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
                     }
-                    else
-                        query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
-                }
-                catch (Exception)
-                {
-                    // do nothing
-                }
+                    catch (Exception)
+                    {
+                        // do nothing
+                    }
 
-                WriteOutput(fileName, query);
+                    WriteOutput(fileName, query);
 
-                ExecutedQueries += 1;
-            });
+                    ExecutedQueries += 1;
+                });
+            }
+            catch(OperationCanceledException)
+            {
+                // do nothing
+            }
 
             // create file with search keywoards which failed to complete
             if (notCompletedFileName != null)
