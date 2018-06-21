@@ -133,7 +133,7 @@ namespace EbayWorker.Models
             }
 
             // change to inner node to decrease DOM traversal
-            rootNode = rootNode.SelectSingleNode(".//ul[@id='ListViewInner']");
+            rootNode = rootNode.SelectSingleNode(".//ul[@class='srp-results srp-list clearfix']");
             if (rootNode == null)
             {
                 // try to recursively load product data
@@ -145,7 +145,7 @@ namespace EbayWorker.Models
                 return;
             }
 
-            var nodes = rootNode.SelectNodes(".//li[starts-with(@id,'item')]");
+            var nodes = rootNode.SelectNodes(".//li[@class='s-item']");
             if (nodes == null || nodes.Count == 0)
             {
                 // no listing found
@@ -156,7 +156,7 @@ namespace EbayWorker.Models
             HtmlNode innerNode;
             foreach (HtmlNode node in nodes)
             {
-                innerNode = node.SelectSingleNode(".//a[@class='vip']");
+                innerNode = node.SelectSingleNode(".//a[@class='s-item__link']");
                 if (innerNode == null)
                     continue;
 
@@ -170,6 +170,7 @@ namespace EbayWorker.Models
                     book.Code = urlParts[urlParts.Length - 1];
 
                 // extract location
+                /* THIS DOESN'T WORK ANYMORE
                 innerNode = node.SelectSingleNode(".//ul[starts-with(@class,'lvdetails')]/li");
                 if (innerNode != null)
                 {
@@ -185,6 +186,7 @@ namespace EbayWorker.Models
 
                     book.Location = bookLocation.Trim().Replace("From ", string.Empty);
                 }
+                */
 
                 // eBay shows advertisements, ignore them
                 if (book.Url.Host.Equals(url.Host, StringComparison.InvariantCultureIgnoreCase))
@@ -256,7 +258,7 @@ namespace EbayWorker.Models
                 return;
             }
 
-            var htmlNode = rootNode.SelectSingleNode(".//div[@id='BottomPanel']//h2[@itemprop='productID']");
+            var htmlNode = rootNode.SelectSingleNode(".//div[@class='itemAttr']//h2[@itemprop='productID']");
             if (htmlNode != null)
                 currentBook.Isbn = htmlNode.InnerText;
 

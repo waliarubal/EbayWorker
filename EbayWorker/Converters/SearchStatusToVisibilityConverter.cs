@@ -11,7 +11,7 @@ namespace EbayWorker.Converters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var status = (SearchStatus)value; ;
-            if (status == SearchStatus.Complete || status == SearchStatus.Failed)
+            if (status == SearchStatus.Complete || status == SearchStatus.Failed || status == SearchStatus.Cancelled)
                 return Visibility.Visible;
 
             return Visibility.Hidden;
