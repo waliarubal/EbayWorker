@@ -187,6 +187,7 @@ namespace EbayWorker.Models
                     book.Location = bookLocation.Trim().Replace("From ", string.Empty);
                 }
                 */
+                book.Location = filter.Location;
 
                 // eBay shows advertisements, ignore them
                 if (book.Url.Host.Equals(url.Host, StringComparison.InvariantCultureIgnoreCase))

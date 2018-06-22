@@ -468,34 +468,41 @@ namespace EbayWorker.ViewModels
             parallelOptions.CancellationToken = _cancellationToken.Token;
             parallelOptions.MaxDegreeOfParallelism = ParallelQueries;
 
-            Parallel.ForEach(SearchQueries, parallelOptions, query =>
+            try
             {
-                if (parallelOptions.CancellationToken.IsCancellationRequested)
-                    return;
-
-                var status = query.Status;
-                if (status == SearchStatus.Working)
-                    return;
-
-                try
+                Parallel.ForEach(SearchQueries, parallelOptions, query =>
                 {
-                    if (FailedQueriesOnly)
+                    if (parallelOptions.CancellationToken.IsCancellationRequested)
+                        return;
+
+                    var status = query.Status;
+                    if (status == SearchStatus.Working)
+                        return;
+
+                    try
                     {
-                        if (status != SearchStatus.Complete)
+                        if (FailedQueriesOnly)
+                        {
+                            if (status != SearchStatus.Complete)
+                                query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+                        }
+                        else
                             query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
                     }
-                    else
-                        query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
-                }
-                catch (Exception)
-                {
-                    // do nothing
-                }
+                    catch (Exception)
+                    {
+                        // do nothing
+                    }
 
-                WriteOutput(fileName, query);
+                    WriteOutput(fileName, query);
 
-                ExecutedQueries += 1;
-            });
+                    ExecutedQueries += 1;
+                });
+            }
+            catch(OperationCanceledException)
+            {
+                // cancelled by user, do nothing
+            }
 
             // create file with search keywoards which failed to complete
             if (notCompletedFileName != null)
