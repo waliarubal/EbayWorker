@@ -11,6 +11,7 @@
     Width="1024"
     Height="600"
     Closing="Window_Closing"
+    Icon="/ebay.ico"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>
@@ -29,8 +30,8 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto" />
@@ -261,53 +262,26 @@
             </GroupBox>
         </Grid>
 
-        <StackPanel
-            Grid.Row="3"
-            Grid.ColumnSpan="3"
-            HorizontalAlignment="Right"
-            Orientation="Horizontal">
-            <CheckBox Content="Automatically retry failed queries." IsChecked="{Binding Path=AutoRetry, Mode=TwoWay}" />
-            <CheckBox Content="Execute unfinished and failed search queries only." IsChecked="{Binding Path=FailedQueriesOnly, Mode=TwoWay}" />
-        </StackPanel>
-
-        <Grid Grid.Row="4" Grid.ColumnSpan="3">
+        <Grid Grid.Row="3" Grid.ColumnSpan="3">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
-            <TextBlock VerticalAlignment="Center" Foreground="Green">
-                <Run Text="Executed " />
-                <Run Text="{Binding Path=ExecutedQueries, Mode=OneWay, FallbackValue=0}" />
-                <Run Text=" of " />
-                <Run Text="{Binding Path=SearchQueries.Count, Mode=OneWay, FallbackValue=0}" />
-                <Run Text=" search queries in " />
-                <Run Text="{Binding Path=ExecutionTime, Mode=OneWay}" />
-                <Run Text="." />
-            </TextBlock>
-            <StackPanel
-                Grid.Column="1"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                Orientation="Horizontal"
-                Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
-                <Image Source="/Assets/refresh16.png" Style="{StaticResource ResourceKey=Spinner}" />
-                <TextBlock
-                    Margin="4,0,0,0"
-                    FontWeight="Bold"
-                    Text="Scraping books data..." />
+            <StackPanel VerticalAlignment="Center" Orientation="Horizontal">
+                <CheckBox Content="Automatically retry failed queries." IsChecked="{Binding Path=AutoRetry, Mode=TwoWay}" />
+                <CheckBox Content="Execute unfinished and failed search queries only." IsChecked="{Binding Path=FailedQueriesOnly, Mode=TwoWay}" />
             </StackPanel>
 
-            <Button Grid.Column="2" Command="{Binding Path=SearchCommand, Mode=OneTime}">
+            <Button Grid.Column="1" Command="{Binding Path=SearchCommand, Mode=OneTime}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Assets/Work16.png" />
                     <TextBlock Text="Scrap Books Data" />
                 </StackPanel>
             </Button>
             <Button
-                Grid.Column="3"
+                Grid.Column="2"
                 Height="24"
                 Margin="2,2,2,0"
                 VerticalAlignment="Top"
@@ -321,7 +295,7 @@
         </Grid>
 
         <DataGrid
-            Grid.Row="5"
+            Grid.Row="4"
             Grid.ColumnSpan="3"
             IsReadOnly="True"
             ItemsSource="{Binding Path=SearchQueries, Mode=OneWay}">
@@ -380,5 +354,47 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
         </DataGrid>
+
+        <StatusBar Grid.Row="5" Grid.ColumnSpan="3">
+            <StatusBar.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                    </Grid>
+                </ItemsPanelTemplate>
+            </StatusBar.ItemsPanel>
+            <StatusBarItem>
+                <StackPanel
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Center"
+                    Orientation="Horizontal"
+                    Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
+                    <Image Source="/Assets/refresh16.png" Style="{StaticResource ResourceKey=Spinner}" />
+                    <TextBlock Margin="4,0,0,0" Text="Scraping books data..." />
+                </StackPanel>
+            </StatusBarItem>
+            <Separator Grid.Column="1" />
+            <StatusBarItem Grid.Column="2">
+                <TextBlock>
+                    <Run Text="Executed " />
+                    <Run Text="{Binding Path=ExecutedQueries, Mode=OneWay, FallbackValue=0}" />
+                    <Run Text=" of " />
+                    <Run Text="{Binding Path=SearchQueries.Count, Mode=OneWay, FallbackValue=0}" />
+                    <Run Text=" search queries in " />
+                    <Run Text="{Binding Path=ExecutionTime, Mode=OneWay}" />
+                    <Run Text="." />
+                </TextBlock>
+            </StatusBarItem>
+            <Separator Grid.Column="3" />
+            <StatusBarItem Grid.Column="4">
+                <TextBlock Text="{Binding Path=AssemblyInfo.Version, Mode=OneTime, StringFormat='Version {0}'}" />
+            </StatusBarItem>
+        </StatusBar>
     </Grid>
 </Window>

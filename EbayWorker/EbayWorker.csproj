@@ -62,6 +62,9 @@
   <PropertyGroup>
     <AssemblyOriginatorKeyFile>EbayWorker.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>ebay.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="HtmlAgilityPack, Version=1.8.4.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.8.4\lib\Net40\HtmlAgilityPack.dll</HintPath>
@@ -208,6 +211,9 @@
   </ItemGroup>
   <ItemGroup>
     <SplashScreen Include="Assets\Ebay528.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="ebay.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

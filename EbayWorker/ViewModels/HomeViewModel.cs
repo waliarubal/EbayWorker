@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
@@ -31,6 +32,7 @@ namespace EbayWorker.ViewModels
         Timer _timer;
         Stopwatch _stopWatch;
         static object _syncLock;
+        AssemblyInformation _assemblyInfo;
 
         const string SETTINGS_FILE_NAME = "Settings.set.aes";
         const string SETTINGS_FILE_PASSWORD = "$admin@12345#";
@@ -52,7 +54,6 @@ namespace EbayWorker.ViewModels
 
             // TODO: remove this option to make app generic
             _groupByStupidLogic = true;
-
         }
 
         ~HomeViewModel()
@@ -66,6 +67,17 @@ namespace EbayWorker.ViewModels
         {
             get { return _executionTime; }
             private set { Set(nameof(ExecutionTime), ref _executionTime, value); }
+        }
+
+        public AssemblyInformation AssemblyInfo
+        {
+            get
+            {
+                if (_assemblyInfo == null)
+                    _assemblyInfo = new AssemblyInformation(Assembly.GetExecutingAssembly());
+
+                return _assemblyInfo;
+            }
         }
 
         public decimal AddToPrice
