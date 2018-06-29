@@ -458,6 +458,9 @@ namespace EbayWorker.ViewModels
             if (SearchQueries == null)
                 return;
 
+            var x = new EbayFindRequest("RubalWal-SmartBuy-PRD-2b058513b-d6cf8fcb", SearchQueries[0].Keywoard, Filter);
+            x.GetResponse(true);
+
             StartTimer();
 
             // output file names

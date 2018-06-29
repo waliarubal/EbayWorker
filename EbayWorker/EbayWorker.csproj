@@ -110,10 +110,9 @@
     </Compile>
     <Compile Include="Converters\SearchStatusToImageSourceConverter.cs" />
     <Compile Include="Converters\SearchStatusToVisibilityConverter.cs" />
+    <Compile Include="EbayFindRequest.cs" />
     <Compile Include="Models\BookCollection.cs" />
     <Compile Include="Models\BookModel.cs" />
-    <Compile Include="Models\Ebay\FindRequestModel.cs" />
-    <Compile Include="Models\Ebay\FindResponseModel.cs" />
     <Compile Include="Models\SearchFilter.cs" />
     <Compile Include="Models\SearchModel.cs" />
     <Compile Include="Models\SellerModel.cs" />
@@ -216,6 +215,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="ebay.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\Windows16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
