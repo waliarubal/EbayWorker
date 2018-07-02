@@ -19,6 +19,8 @@ namespace EbayWorker
         readonly SearchFilter _filter;
         bool _isAllowedSellersFilterApplied, _isRestrictedSellersFilterApplied;
         static readonly Dictionary<string, string> _locationToGlobalIdMapping;
+        SearchStatus _status;
+        string _errorMessage;
 
         #region constructor/destructor
 
@@ -54,6 +56,11 @@ namespace EbayWorker
             get { return _isRestrictedSellersFilterApplied; }
         }
 
+        public SearchStatus Status
+        {
+            get { return _status; }
+        }
+
         #endregion
 
         #region private methods
@@ -71,6 +78,7 @@ namespace EbayWorker
             xmlBuilder.AppendLineFormatted("    <value>{0}</value>", GetGlobalId(_filter.Location));
             xmlBuilder.AppendLineFormatted("  </itemFilter>");
 
+            /*
             xmlBuilder.AppendLineFormatted("  <itemFilter>");
             xmlBuilder.AppendLineFormatted("    <name>{0}</name>", "ListingType");
             if (_filter.IsAuction && !_filter.IsBuyItNow)
@@ -82,6 +90,7 @@ namespace EbayWorker
             if (_filter.IsClassifiedAds)
                 xmlBuilder.AppendLineFormatted("    <value>{0}</value>", "Classified");
             xmlBuilder.AppendLineFormatted("  </itemFilter>");
+            */
 
             if (_filter.IsPriceFiltered)
             {
@@ -142,6 +151,24 @@ namespace EbayWorker
             return xmlBuilder.ToString();
         }
 
+        void ParseResponse(string responseXml)
+        {
+            var xml = new XmlDocument();
+            xml.LoadXml(responseXml);
+
+            var namespaceManager = new XmlNamespaceManager(xml.NameTable);
+            namespaceManager.AddNamespace(string.Empty, "http://www.ebay.com/marketplace/search/v1/services");
+
+            var root = xml.DocumentElement;
+
+            _status =root.SelectSingleNode("ack").InnerText.Equals("Success") ? SearchStatus.Complete : SearchStatus.Failed;
+
+            if (_status == SearchStatus.Failed)
+            {
+                return;
+            }
+        }
+
         string GetGlobalId(string location)
         {
             if (_locationToGlobalIdMapping.ContainsKey(location))
@@ -154,6 +181,9 @@ namespace EbayWorker
 
         public void GetResponse(bool useProductionEndpoint)
         {
+            _status = SearchStatus.Working;
+            _errorMessage = null;
+
             var endpoint = useProductionEndpoint ? new Uri(ENDPOINT_PRODUCTION) : new Uri(ENDPOINT_SANDBOX);
 
             var data = Encoding.UTF8.GetBytes(ToXml());
@@ -183,8 +213,7 @@ namespace EbayWorker
                 responseXml = reader.ReadToEnd();
             }
 
-            var xml = new XmlDocument();
-            xml.LoadXml(responseXml);
+            ParseResponse(responseXml);
         }
 
         public override string ToString()
