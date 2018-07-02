@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:EbayWorker.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
     xmlns:local="clr-namespace:EbayWorker.Views"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:vm="clr-namespace:EbayWorker.ViewModels"
@@ -24,6 +25,14 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="Loaded">
+            <i:InvokeCommandAction Command="{Binding Path=LoadSettingsCommand, Mode=OneTime}" />
+        </i:EventTrigger>
+        <i:EventTrigger EventName="Closing">
+            <i:InvokeCommandAction Command="{Binding Path=SaveSettingsCommand, Mode=OneTime}" />
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -298,7 +307,7 @@
                 Height="24"
                 Margin="2,2,2,0"
                 VerticalAlignment="Top"
-                Command="{Binding Path=CancelSearchCommand, Mode=OneTime}">
+                Command="{Binding Path=ManageAppIdsCommand, Mode=OneTime}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Assets/Windows16.png" />
                     <TextBlock Text="App IDs" />

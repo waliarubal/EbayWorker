@@ -116,8 +116,12 @@
     <Compile Include="Models\SearchFilter.cs" />
     <Compile Include="Models\SearchModel.cs" />
     <Compile Include="Models\SellerModel.cs" />
+    <Compile Include="ViewModels\AppIdViewModel.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />
     <Compile Include="ViewModels\SearchViewModel.cs" />
+    <Compile Include="Views\AppIdView.xaml.cs">
+      <DependentUpon>AppIdView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\HomeView.xaml.cs">
       <DependentUpon>HomeView.xaml</DependentUpon>
     </Compile>
@@ -178,6 +182,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Views\AppIdView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\HomeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -218,6 +226,10 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\Windows16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\minus16.png" />
+    <Resource Include="Assets\plus16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

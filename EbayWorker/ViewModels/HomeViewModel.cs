@@ -37,7 +37,9 @@ namespace EbayWorker.ViewModels
         const string SETTINGS_FILE_NAME = "Settings.set.aes";
         const string SETTINGS_FILE_PASSWORD = "$admin@12345#";
 
-        CommandBase _cancelSearch, _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers;
+        CommandBase _saveSettings, _loadSettings, _cancelSearch, _selectInputFile, _selectOutputDirectory, _search, _showSearchQuery, _selectAllowedSellers, _selectRestrictedSellers, _clearAllowedSellers, _clearRestrictedSellers, _manageAppIds;
+
+        #region constructor/destructor
 
         static HomeViewModel()
         {
@@ -50,16 +52,11 @@ namespace EbayWorker.ViewModels
             _executionTime = "00:00:00";
             _settingsFile = Path.Combine(App.Current.GetStartupDirectory(), SETTINGS_FILE_NAME);
 
-            LoadSettings();
-
             // TODO: remove this option to make app generic
             _groupByStupidLogic = true;
         }
 
-        ~HomeViewModel()
-        {
-            SaveSettings();
-        }
+        #endregion
 
         #region properties
 
@@ -222,6 +219,28 @@ namespace EbayWorker.ViewModels
             }
         }
 
+        public ICommand SaveSettingsCommand
+        {
+            get
+            {
+                if (_saveSettings == null)
+                    _saveSettings = new RelayCommand(SaveSettings);
+
+                return _saveSettings;
+            }
+        }
+
+        public ICommand LoadSettingsCommand
+        {
+            get
+            {
+                if (_loadSettings == null)
+                    _loadSettings = new RelayCommand(LoadSettings);
+
+                return _loadSettings;
+            }
+        }
+
         public ICommand SelectOutputDirectoryCommand
         {
             get
@@ -316,7 +335,30 @@ namespace EbayWorker.ViewModels
             }
         }
 
+        public ICommand ManageAppIdsCommand
+        {
+            get
+            {
+                if (_manageAppIds == null)
+                    _manageAppIds = new RelayCommand(ManageAppIds) { IsSynchronous = true };
+
+                return _manageAppIds;
+            }
+        }
+
         #endregion
+
+        void ManageAppIds()
+        {
+            var manageAppIds = new AppIdView();
+            manageAppIds.ShowDialog();
+        }
+
+        void ShowSearchQuery(SearchModel searchQuery)
+        {
+            var search = new SearchView(searchQuery);
+            search.ShowDialog();
+        }
 
         void SaveSettings()
         {
@@ -354,14 +396,14 @@ namespace EbayWorker.ViewModels
             settings.Load(_settingsFile, SETTINGS_FILE_PASSWORD);
             AddToPrice = settings.GetValue<decimal>(nameof(AddToPrice));
             AddPercentOfPrice = settings.GetValue<bool>(nameof(AddPercentOfPrice));
-            ParallelQueries = settings.GetValue<int>(nameof(ParallelQueries), 5);
+            ParallelQueries = settings.GetValue(nameof(ParallelQueries), 5);
             FailedQueriesOnly = settings.GetValue<bool>(nameof(FailedQueriesOnly));
             AutoRetry = settings.GetValue<bool>(nameof(AutoRetry));
             ScrapBooksInParallel = settings.GetValue<bool>(nameof(ScrapBooksInParallel));
             ExcludeEmptyResults = settings.GetValue<bool>(nameof(ExcludeEmptyResults));
             GroupByCondition = settings.GetValue<bool>(nameof(GroupByCondition));
             GroupByStupidLogic = settings.GetValue<bool>(nameof(GroupByStupidLogic));
-            Filter.Location = settings.GetValue<string>(nameof(Filter.Location), "United States");
+            Filter.Location = settings.GetValue(nameof(Filter.Location), "United States");
             Filter.CheckFeedbackScore = settings.GetValue<bool>(nameof(Filter.CheckFeedbackScore));
             Filter.FeedbackScore = settings.GetValue<long>(nameof(Filter.FeedbackScore));
             Filter.CheckFeedbackPercent = settings.GetValue<bool>(nameof(Filter.CheckFeedbackPercent));
@@ -374,7 +416,7 @@ namespace EbayWorker.ViewModels
             Filter.CheckRestrictedSellers = settings.GetValue<bool>(nameof(Filter.CheckRestrictedSellers));
             Filter.RestrictedSellers = StringToEnumerable(settings.GetValue<string>(nameof(Filter.RestrictedSellers)));
             Filter.IsAuction = settings.GetValue<bool>(nameof(Filter.IsAuction));
-            Filter.IsBuyItNow = settings.GetValue<bool>(nameof(Filter.IsBuyItNow), true);
+            Filter.IsBuyItNow = settings.GetValue(nameof(Filter.IsBuyItNow), true);
             Filter.IsClassifiedAds = settings.GetValue<bool>(nameof(Filter.IsClassifiedAds));
         }
 
@@ -416,12 +458,6 @@ namespace EbayWorker.ViewModels
                     sellers.Add(sellerName);
 
             return sellers;
-        }
-
-        void ShowSearchQuery(SearchModel searchQuery)
-        {
-            var search = new SearchView(searchQuery);
-            search.ShowDialog();
         }
 
         void StartTimer()
