@@ -47,7 +47,7 @@
             Grid.Row="2"
             CanUserResizeColumns="False"
             IsReadOnly="True"
-            ItemsSource="{Binding Path=AppIds, Mode=OneTime}">
+            ItemsSource="{Binding Path=AppIds, Mode=OneWay}">
             <DataGrid.Columns>
                 <DataGridTextColumn
                     Width="*"

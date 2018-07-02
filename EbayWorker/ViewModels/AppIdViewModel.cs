@@ -1,5 +1,6 @@
 ﻿using NullVoidCreations.WpfHelpers.Base;
 using NullVoidCreations.WpfHelpers.Commands;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
@@ -17,6 +18,12 @@ namespace EbayWorker.ViewModels
         public AppIdViewModel()
         {
             _appIds = new ObservableCollection<string>();
+        }
+
+        public AppIdViewModel(IEnumerable<string> appIds): this()
+        {
+            foreach (var appId in appIds)
+                AppIds.Add(appId);
         }
 
         #region properties

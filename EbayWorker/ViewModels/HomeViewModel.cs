@@ -27,6 +27,7 @@ namespace EbayWorker.ViewModels
         bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _addPercentOfPice, _autoRetry;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
+        HashSet<string> _appIds;
         decimal _addToPrice;
         System.Threading.CancellationTokenSource _cancellationToken;
         Timer _timer;
@@ -350,8 +351,14 @@ namespace EbayWorker.ViewModels
 
         void ManageAppIds()
         {
+            var viewModel = new AppIdViewModel(_appIds);
             var manageAppIds = new AppIdView();
+            manageAppIds.DataContext = viewModel;
             manageAppIds.ShowDialog();
+
+            _appIds.Clear();
+            foreach (var appId in viewModel.AppIds)
+                _appIds.Add(appId);
         }
 
         void ShowSearchQuery(SearchModel searchQuery)
@@ -387,6 +394,7 @@ namespace EbayWorker.ViewModels
             settings.SetValue(nameof(Filter.IsAuction), Filter.IsAuction);
             settings.SetValue(nameof(Filter.IsBuyItNow), Filter.IsBuyItNow);
             settings.SetValue(nameof(Filter.IsClassifiedAds), Filter.IsClassifiedAds);
+            settings.SetValue(nameof(_appIds), EnumerableToString(_appIds));
             settings.Save(_settingsFile, SETTINGS_FILE_PASSWORD);
         }
 
@@ -418,6 +426,7 @@ namespace EbayWorker.ViewModels
             Filter.IsAuction = settings.GetValue<bool>(nameof(Filter.IsAuction));
             Filter.IsBuyItNow = settings.GetValue(nameof(Filter.IsBuyItNow), true);
             Filter.IsClassifiedAds = settings.GetValue<bool>(nameof(Filter.IsClassifiedAds));
+            _appIds = StringToEnumerable(settings.GetValue<string>(nameof(_appIds)));
         }
 
         string EnumerableToString(IEnumerable<string> values)
