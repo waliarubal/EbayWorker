@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Xml;
+using System.Xml.XPath;
 
 namespace EbayWorker
 {
@@ -20,7 +21,7 @@ namespace EbayWorker
         bool _isAllowedSellersFilterApplied, _isRestrictedSellersFilterApplied;
         static readonly Dictionary<string, string> _locationToGlobalIdMapping;
         SearchStatus _status;
-        string _errorMessage;
+        IEnumerable<string> _errorMessages;
 
         #region constructor/destructor
 
@@ -59,6 +60,11 @@ namespace EbayWorker
         public SearchStatus Status
         {
             get { return _status; }
+        }
+
+        public IEnumerable<string> Errors
+        {
+            get { return _errorMessages; }
         }
 
         #endregion
@@ -153,20 +159,25 @@ namespace EbayWorker
 
         void ParseResponse(string responseXml)
         {
+            // get rid of namespaces
+            responseXml = responseXml.Replace(" xmlns=\"", " whocares=\"");
+
             var xml = new XmlDocument();
             xml.LoadXml(responseXml);
 
-            var namespaceManager = new XmlNamespaceManager(xml.NameTable);
-            namespaceManager.AddNamespace(string.Empty, "http://www.ebay.com/marketplace/search/v1/services");
-
-            var root = xml.DocumentElement;
-
-            _status =root.SelectSingleNode("ack").InnerText.Equals("Success") ? SearchStatus.Complete : SearchStatus.Failed;
-
-            if (_status == SearchStatus.Failed)
+            var isComplete = xml.SelectSingleNode("findItemsAdvancedResponse/ack").InnerText.Equals("Success");
+            if (!isComplete)
             {
+                var errors = new List<string>();
+                foreach (XmlNode errorNode in xml.SelectNodes("findItemsAdvancedResponse/errorMessage/error/message"))
+                    errors.Add(errorNode.InnerText);
+                _errorMessages = errors;
+
+                _status = SearchStatus.Failed;
                 return;
             }
+
+            _status = SearchStatus.Complete;
         }
 
         string GetGlobalId(string location)
@@ -182,7 +193,7 @@ namespace EbayWorker
         public void GetResponse(bool useProductionEndpoint)
         {
             _status = SearchStatus.Working;
-            _errorMessage = null;
+            _errorMessages = null;
 
             var endpoint = useProductionEndpoint ? new Uri(ENDPOINT_PRODUCTION) : new Uri(ENDPOINT_SANDBOX);
 
