@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows;
 using System.Windows.Input;
 using Forms = System.Windows.Forms;
 
@@ -22,7 +23,7 @@ namespace EbayWorker.ViewModels
         const char SEPARATOR = 'μ';
 
         readonly string _settingsFile;
-        string _inputFilePath, _outputDirectoryPath, _executionTime;
+        string _inputFilePath, _outputDirectoryPath, _executionTime, _statusMessage;
         int _parallelQueries, _executedQueries;
         bool _failedQueriesOnly, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _addPercentOfPice;
         SearchFilter _filter;
@@ -65,6 +66,12 @@ namespace EbayWorker.ViewModels
         {
             get { return _executionTime; }
             private set { Set(nameof(ExecutionTime), ref _executionTime, value); }
+        }
+
+        public string StatusMessage
+        {
+            get { return _statusMessage; }
+            private set { Set(nameof(StatusMessage), ref _statusMessage, value); }
         }
 
         public AssemblyInformation AssemblyInfo
@@ -485,11 +492,15 @@ namespace EbayWorker.ViewModels
         void Search()
         {
             if (SearchQueries == null)
+            {
+                MessageBox.Show("Input file with search keywoards not selected.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
-
-            var bc = new BookCollection();
-            var x = new EbayFindRequest("RubalWal-SmartBuy-PRD-2b058513b-d6cf8fcb", SearchQueries[0].Keywoard, Filter);
-            x.GetResponse(true, ref bc);
+            }
+            if (_appIds == null || _appIds.Count == 0)
+            {
+                MessageBox.Show("eBay App ID (Client ID) not added.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
             StartTimer();
 
@@ -523,6 +534,8 @@ namespace EbayWorker.ViewModels
                     var status = query.Status;
                     if (status == SearchStatus.Working)
                         return;
+
+                    StatusMessage = string.Format("Gathering data for search keywoard {0}...", query.Keywoard);
 
                     try
                     {
@@ -612,7 +625,7 @@ namespace EbayWorker.ViewModels
                 if (string.IsNullOrWhiteSpace(keyWoard))
                     continue;
 
-                var search = new SearchModel();
+                var search = new SearchModel(_appIds);
                 search.Keywoard = keyWoard;
                 search.Category = Category.Books;
                 searchQueries.Add(search);

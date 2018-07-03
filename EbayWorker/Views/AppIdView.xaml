@@ -9,6 +9,7 @@
     Title="eBay App IDs"
     Width="480"
     Height="320"
+    Icon="/ebay.ico"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>

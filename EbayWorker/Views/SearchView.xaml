@@ -10,6 +10,7 @@
     Title="Search Query"
     Width="1024"
     Height="600"
+    Icon="/ebay.ico"
     WindowStartupLocation="CenterScreen"
     mc:Ignorable="d">
     <Window.DataContext>

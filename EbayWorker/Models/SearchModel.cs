@@ -1,5 +1,6 @@
 ﻿using NullVoidCreations.WpfHelpers.Base;
 using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
@@ -28,9 +29,11 @@ namespace EbayWorker.Models
         SearchStatus _status;
         readonly Type _conditionType;
         BookCollection _books;
+        readonly IEnumerable<string> _appIds;
 
-        public SearchModel()
+        public SearchModel(IEnumerable<string> appIds)
         {
+            _appIds = appIds;
             _books = new BookCollection();
             _conditionType = typeof(BookCondition);
         }
@@ -74,9 +77,15 @@ namespace EbayWorker.Models
                 return;
             }
 
-            var findRequest = new EbayFindRequest("RubalWal-SmartBuy-PRD-2b058513b-d6cf8fcb", Keywoard, filter);
-            findRequest.GetResponse(USE_PRODUCTION, ref _books);
-            Status = findRequest.Status;
+            foreach(var appId in _appIds)
+            {
+                if (Status == SearchStatus.Working || Status == SearchStatus.Complete)
+                    break;
+
+                var findRequest = new EbayFindRequest(appId, Keywoard, filter);
+                findRequest.GetResponse(USE_PRODUCTION, ref _books);
+                Status = findRequest.Status;
+            }
 
             // mark query complete only when data for all books is gathered
             if (Status != SearchStatus.Failed)

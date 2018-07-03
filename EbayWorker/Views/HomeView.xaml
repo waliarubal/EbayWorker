@@ -280,7 +280,7 @@
             <Button Grid.Column="1" Command="{Binding Path=SearchCommand, Mode=OneTime}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Assets/Work16.png" />
-                    <TextBlock Text="Gather Books Data" />
+                    <TextBlock Text="Gather Data" />
                 </StackPanel>
             </Button>
             <Button
@@ -390,7 +390,7 @@
                     Orientation="Horizontal"
                     Visibility="{Binding Path=SearchCommand.IsExecuting, Mode=OneWay, Converter={StaticResource ResourceKey=BooleanToVisibilityConverter}}">
                     <Image Source="/Assets/refresh16.png" Style="{StaticResource ResourceKey=Spinner}" />
-                    <TextBlock Margin="4,0,0,0" Text="Gathering books data..." />
+                    <TextBlock Margin="4,0,0,0" Text="{Binding Path=StatusMessage, Mode=OneWay, FallbackValue='Gathering data...'}" />
                 </StackPanel>
             </StatusBarItem>
             <Separator Grid.Column="1" />
