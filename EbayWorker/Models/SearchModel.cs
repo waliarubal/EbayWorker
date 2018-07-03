@@ -68,9 +68,6 @@ namespace EbayWorker.Models
 
         internal void Search(SearchFilter filter, CancellationToken cancellationToken)
         {
-            Status = SearchStatus.Working;
-            _books.Clear();
-
             if (cancellationToken.IsCancellationRequested)
             {
                 Status = SearchStatus.Cancelled;
@@ -82,14 +79,13 @@ namespace EbayWorker.Models
                 if (Status == SearchStatus.Working || Status == SearchStatus.Complete)
                     break;
 
+                Status = SearchStatus.Working;
+                _books.Clear();
+
                 var findRequest = new EbayFindRequest(appId, Keywoard, filter);
                 findRequest.GetResponse(USE_PRODUCTION, ref _books);
                 Status = findRequest.Status;
             }
-
-            // mark query complete only when data for all books is gathered
-            if (Status != SearchStatus.Failed)
-                Status = SearchStatus.Complete;
         }
 
         decimal ExtractDecimal(string text)
