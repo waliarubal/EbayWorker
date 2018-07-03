@@ -24,7 +24,7 @@ namespace EbayWorker.ViewModels
         readonly string _settingsFile;
         string _inputFilePath, _outputDirectoryPath, _executionTime;
         int _parallelQueries, _executedQueries;
-        bool _failedQueriesOnly, _scrapBooksInParallel, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _addPercentOfPice, _autoRetry;
+        bool _failedQueriesOnly, _excludeEmptyResults, _groupByCondition, _groupByStupidLogic, _addPercentOfPice;
         SearchFilter _filter;
         List<SearchModel> _searchQueries;
         HashSet<string> _appIds;
@@ -120,7 +120,7 @@ namespace EbayWorker.ViewModels
 
         public int MaxParallelQueries
         {
-            get { return 20; }
+            get { return 18; }
         }
 
         public SearchFilter Filter
@@ -173,18 +173,6 @@ namespace EbayWorker.ViewModels
         {
             get { return _failedQueriesOnly; }
             set { Set(nameof(FailedQueriesOnly), ref _failedQueriesOnly, value); }
-        }
-
-        public bool AutoRetry
-        {
-            get { return _autoRetry; }
-            set { Set(nameof(AutoRetry), ref _autoRetry, value); }
-        }
-
-        public bool ScrapBooksInParallel
-        {
-            get { return _scrapBooksInParallel; }
-            set { Set(nameof(ScrapBooksInParallel), ref _scrapBooksInParallel, value); }
         }
 
         public bool ExcludeEmptyResults
@@ -374,8 +362,6 @@ namespace EbayWorker.ViewModels
             settings.SetValue(nameof(AddPercentOfPrice), AddPercentOfPrice);
             settings.SetValue(nameof(ParallelQueries), ParallelQueries);
             settings.SetValue(nameof(FailedQueriesOnly), FailedQueriesOnly);
-            settings.SetValue(nameof(AutoRetry), AutoRetry);
-            settings.SetValue(nameof(ScrapBooksInParallel), ScrapBooksInParallel);
             settings.SetValue(nameof(ExcludeEmptyResults), ExcludeEmptyResults);
             settings.SetValue(nameof(GroupByCondition), GroupByCondition);
             settings.SetValue(nameof(GroupByStupidLogic), GroupByStupidLogic);
@@ -406,8 +392,6 @@ namespace EbayWorker.ViewModels
             AddPercentOfPrice = settings.GetValue<bool>(nameof(AddPercentOfPrice));
             ParallelQueries = settings.GetValue(nameof(ParallelQueries), 5);
             FailedQueriesOnly = settings.GetValue<bool>(nameof(FailedQueriesOnly));
-            AutoRetry = settings.GetValue<bool>(nameof(AutoRetry));
-            ScrapBooksInParallel = settings.GetValue<bool>(nameof(ScrapBooksInParallel));
             ExcludeEmptyResults = settings.GetValue<bool>(nameof(ExcludeEmptyResults));
             GroupByCondition = settings.GetValue<bool>(nameof(GroupByCondition));
             GroupByStupidLogic = settings.GetValue<bool>(nameof(GroupByStupidLogic));
@@ -503,8 +487,9 @@ namespace EbayWorker.ViewModels
             if (SearchQueries == null)
                 return;
 
+            var bc = new BookCollection();
             var x = new EbayFindRequest("RubalWal-SmartBuy-PRD-2b058513b-d6cf8fcb", SearchQueries[0].Keywoard, Filter);
-            x.GetResponse(true);
+            x.GetResponse(true, ref bc);
 
             StartTimer();
 
@@ -544,10 +529,10 @@ namespace EbayWorker.ViewModels
                         if (FailedQueriesOnly)
                         {
                             if (status != SearchStatus.Complete)
-                                query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+                                query.Search(Filter, parallelOptions.CancellationToken);
                         }
                         else
-                            query.Search(Filter, ParallelQueries, ScrapBooksInParallel, AutoRetry, parallelOptions.CancellationToken);
+                            query.Search(Filter, parallelOptions.CancellationToken);
                     }
                     catch (Exception)
                     {

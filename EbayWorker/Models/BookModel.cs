@@ -3,14 +3,14 @@ using System;
 
 namespace EbayWorker.Models
 {
-    public enum BookCondition: byte
+    public enum BookCondition: int
     {
         Unknown,
-        BrandNew,
-        LikeNew,
-        VeryGood,
-        Good,
-        Acceptable
+        BrandNew = 1000,
+        LikeNew = 3000,
+        VeryGood = 4000,
+        Good = 5000,
+        Acceptable = 6000
     }
 
     public class BookModel: NotificationBase

@@ -6,7 +6,6 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Xml;
-using System.Xml.XPath;
 
 namespace EbayWorker
 {
@@ -84,7 +83,6 @@ namespace EbayWorker
             xmlBuilder.AppendLineFormatted("    <value>{0}</value>", GetGlobalId(_filter.Location));
             xmlBuilder.AppendLineFormatted("  </itemFilter>");
 
-            /*
             xmlBuilder.AppendLineFormatted("  <itemFilter>");
             xmlBuilder.AppendLineFormatted("    <name>{0}</name>", "ListingType");
             if (_filter.IsAuction && !_filter.IsBuyItNow)
@@ -96,7 +94,6 @@ namespace EbayWorker
             if (_filter.IsClassifiedAds)
                 xmlBuilder.AppendLineFormatted("    <value>{0}</value>", "Classified");
             xmlBuilder.AppendLineFormatted("  </itemFilter>");
-            */
 
             if (_filter.IsPriceFiltered)
             {
@@ -157,7 +154,35 @@ namespace EbayWorker
             return xmlBuilder.ToString();
         }
 
-        void ParseResponse(string responseXml)
+        IList<string> GetErrors(XmlDocument xml, string xPath)
+        {
+            var errors = new List<string>();
+            foreach (XmlNode errorNode in xml.SelectNodes(xPath))
+                errors.Add(errorNode.InnerText);
+
+            return errors;
+        }
+
+        bool IncludeBook(BookModel book, SearchFilter filter)
+        {
+            var seller = book.Seller;
+
+            if (filter.CheckFeedbackScore && filter.FeedbackScore > seller.FeedbackScore)
+                return false;
+
+            if (filter.CheckFeedbackPercent && filter.FeedbackPercent > seller.FeedbackPercent)
+                return false;
+
+            if (!IsAllowedSellersFilterApplied && filter.CheckAllowedSellers && filter.AllowedSellers != null && !filter.AllowedSellers.Contains(seller.Name))
+                return false;
+
+            if (!IsRestrictedSellersFilterApplied && filter.CheckRestrictedSellers && filter.RestrictedSellers != null && filter.RestrictedSellers.Contains(seller.Name))
+                return false;
+
+            return true;
+        }
+
+        void ParseResponse(string responseXml, ref BookCollection books)
         {
             // get rid of namespaces
             responseXml = responseXml.Replace(" xmlns=\"", " whocares=\"");
@@ -165,16 +190,54 @@ namespace EbayWorker
             var xml = new XmlDocument();
             xml.LoadXml(responseXml);
 
+            // trap API error
+            var errors = GetErrors(xml, "errorMessage/error/message");
+            if (errors.Count > 0)
+            {
+                _errorMessages = errors;
+                _status = SearchStatus.Failed;
+                return;
+            }
+
+            // trap API method call failure error
             var isComplete = xml.SelectSingleNode("findItemsAdvancedResponse/ack").InnerText.Equals("Success");
             if (!isComplete)
             {
-                var errors = new List<string>();
-                foreach (XmlNode errorNode in xml.SelectNodes("findItemsAdvancedResponse/errorMessage/error/message"))
-                    errors.Add(errorNode.InnerText);
-                _errorMessages = errors;
-
+                _errorMessages = GetErrors(xml, "findItemsAdvancedResponse/errorMessage/error/message");
                 _status = SearchStatus.Failed;
                 return;
+            }
+
+            foreach(XmlNode itemNode in xml.SelectNodes("findItemsAdvancedResponse/searchResult/item"))
+            {
+                var book = new BookModel();
+                book.Status = _status;
+
+                try
+                {
+                    book.Code = itemNode.SelectSingleNode("itemId").InnerText;
+                    book.Title = itemNode.SelectSingleNode("title").InnerText;
+                    book.Url = new Uri(itemNode.SelectSingleNode("viewItemURL").InnerText);
+                    book.Isbn = _isbn;
+                    book.Location = itemNode.SelectSingleNode("location").InnerText;
+                    book.Seller = new SellerModel
+                    {
+                        Name = itemNode.SelectSingleNode("sellerInfo/sellerUserName").InnerText,
+                        FeedbackScore = long.Parse(itemNode.SelectSingleNode("sellerInfo/feedbackScore").InnerText),
+                        FeedbackPercent = decimal.Parse(itemNode.SelectSingleNode("sellerInfo/positiveFeedbackPercent").InnerText)
+                    };
+                    book.Price = decimal.Parse(itemNode.SelectSingleNode("sellingStatus/convertedCurrentPrice").InnerText);
+                    book.Condition = (BookCondition)int.Parse(itemNode.SelectSingleNode("condition/conditionId").InnerText);
+
+                    book.Status = SearchStatus.Complete;
+                }
+                catch(XmlException ex)
+                {
+                    book.Status = SearchStatus.Failed;
+                }
+
+                if (book.Status == SearchStatus.Complete && IncludeBook(book, _filter))
+                    books.Add(book);
             }
 
             _status = SearchStatus.Complete;
@@ -190,10 +253,11 @@ namespace EbayWorker
 
         #endregion
 
-        public void GetResponse(bool useProductionEndpoint)
+        public void GetResponse(bool useProductionEndpoint, ref BookCollection books)
         {
             _status = SearchStatus.Working;
             _errorMessages = null;
+            books.Clear();
 
             var endpoint = useProductionEndpoint ? new Uri(ENDPOINT_PRODUCTION) : new Uri(ENDPOINT_SANDBOX);
 
@@ -218,13 +282,23 @@ namespace EbayWorker
             }
 
             string responseXml;
-            using (var response = (HttpWebResponse)request.GetResponse())
-            using (var reader = new StreamReader(response.GetResponseStream()))
+            try
             {
-                responseXml = reader.ReadToEnd();
+                using (var response = (HttpWebResponse)request.GetResponse())
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    responseXml = reader.ReadToEnd();
+                }
+            }
+            catch(WebException ex)
+            {
+                using (var reader = new StreamReader(ex.Response.GetResponseStream()))
+                {
+                    responseXml = reader.ReadToEnd();
+                }
             }
 
-            ParseResponse(responseXml);
+            ParseResponse(responseXml, ref books);
         }
 
         public override string ToString()

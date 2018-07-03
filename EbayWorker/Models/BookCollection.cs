@@ -111,6 +111,7 @@ namespace EbayWorker.Models
             _books.Add(item);
             RaisePropertyChanged(nameof(Items));
             RaisePropertyChanged(nameof(Count));
+            Item_PropertyChanged(item, new PropertyChangedEventArgs("Condition"));
         }
 
         public void Clear()

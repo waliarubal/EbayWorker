@@ -14,6 +14,7 @@ namespace EbayWorker.ViewModels
 
         ICommand _addAppId, _deleteAppId;
 
+        #region constructor/destructor
 
         public AppIdViewModel()
         {
@@ -25,6 +26,8 @@ namespace EbayWorker.ViewModels
             foreach (var appId in appIds)
                 AppIds.Add(appId);
         }
+
+        #endregion
 
         #region properties
 
