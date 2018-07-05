@@ -227,7 +227,12 @@ namespace EbayWorker
                         FeedbackPercent = decimal.Parse(itemNode.SelectSingleNode("sellerInfo/positiveFeedbackPercent").InnerText)
                     };
                     book.Price = decimal.Parse(itemNode.SelectSingleNode("sellingStatus/convertedCurrentPrice").InnerText);
-                    book.Condition = (BookCondition)int.Parse(itemNode.SelectSingleNode("condition/conditionId").InnerText);
+
+                    var condition = itemNode.SelectSingleNode("condition/conditionId");
+                    if (condition == null)
+                        book.Condition = BookCondition.Unknown;
+                    else
+                        book.Condition = (BookCondition)int.Parse(condition.InnerText);
 
                     book.Status = SearchStatus.Complete;
                 }
@@ -275,10 +280,19 @@ namespace EbayWorker
             request.Headers.Add("X-EBAY-SOA-RESPONSE-DATA-FORMAT", DATA_FORMAT);
             request.Headers.Add("X-EBAY-SOA-SECURITY-APPNAME", _appId);
 
-            // write post data
-            using (var writer = request.GetRequestStream())
+            try
             {
-                writer.Write(data, 0, data.Length);
+                // write post data
+                using (var writer = request.GetRequestStream())
+                {
+                    writer.Write(data, 0, data.Length);
+                }
+            }
+            catch(WebException ex)
+            {
+                _errorMessages = new List<string> { ex.Message };
+                _status = SearchStatus.Failed;
+                return;
             }
 
             string responseXml;
@@ -292,6 +306,13 @@ namespace EbayWorker
             }
             catch(WebException ex)
             {
+                if (ex.Response == null)
+                {
+                    _errorMessages = new List<string> { ex.Message };
+                    _status = SearchStatus.Failed;
+                    return;
+                }
+
                 using (var reader = new StreamReader(ex.Response.GetResponseStream()))
                 {
                     responseXml = reader.ReadToEnd();

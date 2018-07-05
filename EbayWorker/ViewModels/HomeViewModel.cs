@@ -537,20 +537,13 @@ namespace EbayWorker.ViewModels
 
                     StatusMessage = string.Format("Gathering data for search keywoard {0}...", query.Keywoard);
 
-                    try
+                    if (FailedQueriesOnly)
                     {
-                        if (FailedQueriesOnly)
-                        {
-                            if (status != SearchStatus.Complete)
-                                query.Search(Filter, parallelOptions.CancellationToken);
-                        }
-                        else
+                        if (status != SearchStatus.Complete)
                             query.Search(Filter, parallelOptions.CancellationToken);
                     }
-                    catch (Exception)
-                    {
-                        // do nothing
-                    }
+                    else
+                        query.Search(Filter, parallelOptions.CancellationToken);
 
                     WriteOutput(fileName, query);
 
