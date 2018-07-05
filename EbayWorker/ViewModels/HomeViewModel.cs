@@ -53,9 +53,6 @@ namespace EbayWorker.ViewModels
             _parallelQueries = 5;
             _executionTime = "00:00:00";
             _settingsFile = Path.Combine(App.Current.GetStartupDirectory(), SETTINGS_FILE_NAME);
-
-            // TODO: remove this option to make app generic
-            _groupByStupidLogic = true;
         }
 
         #endregion
@@ -418,6 +415,9 @@ namespace EbayWorker.ViewModels
             Filter.IsBuyItNow = settings.GetValue(nameof(Filter.IsBuyItNow), true);
             Filter.IsClassifiedAds = settings.GetValue<bool>(nameof(Filter.IsClassifiedAds));
             _appIds = StringToEnumerable(settings.GetValue<string>(nameof(_appIds)));
+
+            // TODO: remove this option to make app generic
+            GroupByStupidLogic = true;
         }
 
         string EnumerableToString(IEnumerable<string> values)
