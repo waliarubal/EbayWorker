@@ -232,7 +232,14 @@ namespace EbayWorker
                     if (condition == null)
                         book.Condition = BookCondition.Unknown;
                     else
-                        book.Condition = (BookCondition)int.Parse(condition.InnerText);
+                    {
+                        // exceptional conditions
+                        var conditionNumber = int.Parse(condition.InnerText);
+                        if (conditionNumber == 2750)
+                            conditionNumber = (int)BookCondition.LikeNew;
+
+                        book.Condition = (BookCondition)conditionNumber;
+                    }
 
                     book.Status = SearchStatus.Complete;
                 }
