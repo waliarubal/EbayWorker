@@ -70,6 +70,9 @@
       <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\Microsoft.Expression.Interactions.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net40\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NullVoidCreations.WpfHelpers, Version=18.7.6.12, Culture=neutral, PublicKeyToken=203b8d613f6ac171, processorArchitecture=MSIL">
       <HintPath>..\packages\NullVoidCreations.WpfHelpers.18.7.6.12\lib\net40\NullVoidCreations.WpfHelpers.dll</HintPath>
     </Reference>
@@ -111,6 +114,7 @@
     <Compile Include="Models\SearchFilter.cs" />
     <Compile Include="Models\SearchModel.cs" />
     <Compile Include="Models\SellerModel.cs" />
+    <Compile Include="Models\UrlShortner.cs" />
     <Compile Include="ViewModels\AppIdViewModel.cs" />
     <Compile Include="ViewModels\HomeViewModel.cs" />
     <Compile Include="ViewModels\SearchViewModel.cs" />
