@@ -16,7 +16,7 @@ namespace EbayWorker.Models
     public class BookModel: NotificationBase
     {
         Uri _url;
-        string _code, _isbn, _title, _location;
+        string _code, _isbn, _title, _location, _country;
         decimal _price;
         BookCondition _condition;
         SearchStatus _status;
@@ -64,6 +64,12 @@ namespace EbayWorker.Models
         {
             get { return _location; }
             set { Set(nameof(Location), ref _location, value); }
+        }
+
+        public string Country
+        {
+            get { return _country; }
+            set { Set(nameof(Country), ref _country, value); }
         }
 
         public decimal Price

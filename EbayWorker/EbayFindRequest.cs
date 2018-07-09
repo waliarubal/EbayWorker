@@ -18,7 +18,7 @@ namespace EbayWorker
         readonly string _isbn, _appId;
         readonly SearchFilter _filter;
         bool _isAllowedSellersFilterApplied, _isRestrictedSellersFilterApplied;
-        static readonly Dictionary<string, string> _locationToGlobalIdMapping;
+        static readonly Dictionary<string, string> _locationToGlobalIdMapping, _locationToCountryMapping;
         SearchStatus _status;
         IEnumerable<string> _errorMessages;
 
@@ -31,6 +31,12 @@ namespace EbayWorker
                 { "United States", "EBAY-US" },
                 { "Canada", "EBAY-ENCA" },
                 { "United Kingdom", "EBAY-GB" }
+            };
+            _locationToCountryMapping = new Dictionary<string, string>
+            {
+                { "United States", "US" },
+                { "Canada", "CA" },
+                { "United Kingdom", "GB" }
             };
         }
 
@@ -167,6 +173,10 @@ namespace EbayWorker
         {
             var seller = book.Seller;
 
+            var country = _locationToCountryMapping[filter.Location];
+            if (!country.Equals(book.Country))
+                return false;
+
             if (filter.CheckFeedbackScore && filter.FeedbackScore > seller.FeedbackScore)
                 return false;
 
@@ -220,6 +230,7 @@ namespace EbayWorker
                     book.Url = new Uri(itemNode.SelectSingleNode("viewItemURL").InnerText);
                     book.Isbn = _isbn;
                     book.Location = itemNode.SelectSingleNode("location").InnerText;
+                    book.Country = itemNode.SelectSingleNode("country").InnerText;
                     book.Seller = new SellerModel
                     {
                         Name = itemNode.SelectSingleNode("sellerInfo/sellerUserName").InnerText,
