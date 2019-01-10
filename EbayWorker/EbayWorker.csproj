@@ -70,11 +70,11 @@
       <HintPath>..\packages\System.Windows.Interactivity.WPF.2.0.20525\lib\net40\Microsoft.Expression.Interactions.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.11.0.2\lib\net40\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.12.0.1\lib\net40\Newtonsoft.Json.dll</HintPath>
     </Reference>
-    <Reference Include="NullVoidCreations.WpfHelpers, Version=18.8.1.13, Culture=neutral, PublicKeyToken=203b8d613f6ac171, processorArchitecture=MSIL">
-      <HintPath>..\packages\NullVoidCreations.WpfHelpers.18.8.1.13\lib\net40\NullVoidCreations.WpfHelpers.dll</HintPath>
+    <Reference Include="NullVoidCreations.WpfHelpers, Version=19.1.10.1229, Culture=neutral, PublicKeyToken=203b8d613f6ac171, processorArchitecture=MSIL">
+      <HintPath>..\packages\NullVoidCreations.WpfHelpers.19.1.10.1229\lib\net40\NullVoidCreations.WpfHelpers.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
